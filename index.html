@@ -478,16 +478,15 @@
   }
   .hist-delete:hover { background: rgba(160,44,58,0.2); color: var(--crimson-bright); border-color: var(--crimson); }
   .hist-delete:active { transform: scale(0.9); }
-  .hist-row1 {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    gap: 8px;
-  }
   .hist-notation { font-weight: 700; color: var(--text); letter-spacing: 1px; }
   .hist-total {
+    flex: 0 0 auto;
+    margin-left: auto;
+    padding-left: 8px;
+    text-align: right;
     font-weight: 800;
-    font-size: 1.3rem;
+    font-size: 1.5rem;
+    line-height: 1;
     color: var(--gold-bright);
   }
   .hist-item.crit-hit .hist-total { color: #6ee7a0; }
@@ -1007,13 +1006,11 @@
             <svg viewBox="0 0 80 80"><polygon points="${points}" /></svg>
           </div>
           <div class="hist-body">
-            <div class="hist-row1">
-              <span class="hist-notation">${h.notation}${tag}</span>
-              <span class="hist-total">${h.total}</span>
-            </div>
+            <div class="hist-notation">${h.notation}${tag}</div>
             <div class="hist-detail">${detail}</div>
             <div class="hist-time">${formatTime(h.ts)}</div>
           </div>
+          <div class="hist-total">${h.total}</div>
           <button class="hist-delete" data-id="${h.id}" aria-label="Smazat tento hod" title="Smazat tento hod">×</button>
         </div>`;
     }).join("");
