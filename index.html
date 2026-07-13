@@ -745,6 +745,7 @@
   "use strict";
 
   const STORAGE_KEY = "dnd_dice_history_v1";
+  const SETTINGS_KEY = "dnd_dice_settings_v1";
   const MAX_HISTORY = 200;
 
   // Polyhedral dice definitions. Each shape is an SVG polygon approximating the real die.
@@ -1021,13 +1022,14 @@
     if (isNaN(n)) n = 1;
     quantity = Math.max(1, Math.min(20, Math.round(n)));
     qtyVal.value = quantity;
+    saveSettings();
   }
   document.getElementById("qtyPlus").addEventListener("click", () => { setQty(quantity + 1); buzz(8); });
   document.getElementById("qtyMinus").addEventListener("click", () => { setQty(quantity - 1); buzz(8); });
   // Keep manual entry clean + clamped, but track raw typing live
   qtyVal.addEventListener("input", () => {
     const n = parseInt(qtyVal.value, 10);
-    if (!isNaN(n)) quantity = Math.max(1, Math.min(20, n));
+    if (!isNaN(n)) { quantity = Math.max(1, Math.min(20, n)); saveSettings(); }
   });
   qtyVal.addEventListener("change", () => setQty(parseInt(qtyVal.value, 10)));
 
@@ -1036,6 +1038,7 @@
     if (isNaN(n)) n = 0;
     n = Math.max(-99, Math.min(99, Math.round(n)));
     modifierInput.value = n;
+    saveSettings();
   }
   document.getElementById("modPlus").addEventListener("click", () => {
     setMod((parseInt(modifierInput.value, 10) || 0) + 1);
@@ -1045,7 +1048,8 @@
     setMod((parseInt(modifierInput.value, 10) || 0) - 1);
     buzz(8);
   });
-  // Keep manual entry clean + clamped
+  // Persist while typing; clamp/normalize on blur
+  modifierInput.addEventListener("input", () => saveSettings());
   modifierInput.addEventListener("change", () => setMod(parseInt(modifierInput.value, 10)));
 
   document.getElementById("rollLast").addEventListener("click", () => {
@@ -1125,8 +1129,55 @@
     if (e.key === "Escape" && drawer.classList.contains("open")) closeDrawer();
   });
 
+  // ---------- Persisted settings (dice count + modifier) ----------
+  function saveSettings() {
+    try {
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify({
+        qty: quantity,
+        mod: parseInt(modifierInput.value, 10) || 0
+      }));
+    } catch (e) { /* storage unavailable — ignore */ }
+  }
+  function loadSettings() {
+    let s = {};
+    try { s = JSON.parse(localStorage.getItem(SETTINGS_KEY) || "{}") || {}; } catch (e) { s = {}; }
+    setQty(typeof s.qty === "number" ? s.qty : 1);
+    setMod(typeof s.mod === "number" ? s.mod : 0);
+  }
+
+  // ---------- Restore the last roll's result banner on load ----------
+  function dieForEntry(h) {
+    let name = h.die;
+    if (!name && h.notation) {
+      const m = h.notation.match(/d\d+/);
+      if (m) name = m[0];
+    }
+    return DICE.find((x) => x.name === name) || null;
+  }
+  function restoreLastRoll(h) {
+    const die = dieForEntry(h);
+    if (!die || !Array.isArray(h.rolls) || !h.rolls.length) return;
+    const rolls = h.rolls;
+    const qty = rolls.length;
+    const mod = h.mod || 0;
+    const total = (typeof h.total === "number") ? h.total : rolls.reduce((a, b) => a + b, 0) + mod;
+
+    selected = die;
+    tray.querySelectorAll(".die").forEach((d) => d.classList.remove("active", "crit-hit", "crit-miss"));
+    const el = tray.querySelector('.die[data-name="' + die.name + '"]');
+    if (el) {
+      el.classList.add("active");
+      const valEl = el.querySelector(".die-value");
+      if (valEl) valEl.textContent = rolls[rolls.length - 1];
+    }
+    showResultDie(die, qty);
+    showResult(die, rolls, mod, total - mod, total, qty);
+  }
+
   // ---------- Init ----------
   loadHistory();
+  loadSettings();
+  if (history.length) restoreLastRoll(history[0]);
 })();
 </script>
 </body>
