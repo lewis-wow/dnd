@@ -87,10 +87,14 @@
     text-transform: uppercase;
   }
 
-  .history-btn {
+  .header-actions {
     position: absolute;
     top: 24px;
     right: 20px;
+    display: flex;
+    gap: 10px;
+  }
+  .header-actions button {
     background: var(--bg-2);
     border: 1px solid var(--edge);
     color: var(--gold);
@@ -104,8 +108,8 @@
     gap: 8px;
     transition: background 0.2s, transform 0.1s, border-color 0.2s;
   }
-  .history-btn:hover { background: var(--face-lit); border-color: var(--gold); }
-  .history-btn:active { transform: scale(0.95); }
+  .header-actions button:hover { background: var(--face-lit); border-color: var(--gold); }
+  .header-actions button:active { transform: scale(0.95); }
   .history-btn .count {
     background: var(--crimson);
     color: #fff;
@@ -385,6 +389,116 @@
   }
   .drawer.open { transform: translateX(0); }
 
+  /* Guide drawer slides in from the LEFT to distinguish it from history */
+  .drawer.left {
+    right: auto;
+    left: 0;
+    width: 100%;
+    max-width: 100%;
+    border-left: none;
+    border-right: 1px solid var(--edge);
+    box-shadow: 8px 0 30px rgba(0,0,0,0.5);
+    transform: translateX(-100%);
+  }
+  .drawer.left.open { transform: translateX(0); }
+
+  /* ---------- Guide (Příručka) content ---------- */
+  .guide-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 14px 16px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .guide-body::-webkit-scrollbar { width: 8px; }
+  .guide-body::-webkit-scrollbar-thumb { background: var(--edge); border-radius: 4px; }
+
+  .guide-intro {
+    flex: 0 0 auto;
+    color: var(--text-dim);
+    font-size: 0.85rem;
+    line-height: 1.5;
+    padding: 2px 2px 6px;
+  }
+
+  .acc-item {
+    flex: 0 0 auto;
+    border: 1px solid var(--edge);
+    border-radius: 12px;
+    background: var(--bg-2);
+    overflow: hidden;
+  }
+  .acc-head {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: none;
+    border: none;
+    color: var(--text);
+    text-align: left;
+    padding: 14px 14px;
+    cursor: pointer;
+    font-size: 0.98rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+  .acc-head:hover { background: var(--face); }
+  .acc-head .acc-ico { font-size: 1.1rem; flex: 0 0 auto; }
+  .acc-head .acc-title { flex: 1 1 auto; color: var(--gold); }
+  .acc-head .acc-chev {
+    flex: 0 0 auto;
+    color: var(--text-dim);
+    transition: transform 0.25s;
+    font-size: 0.9rem;
+  }
+  .acc-item.open .acc-head .acc-chev { transform: rotate(90deg); color: var(--gold); }
+
+  .acc-body {
+    display: none;
+    padding: 2px 16px 16px;
+    border-top: 1px solid var(--edge);
+    color: var(--text);
+    font-size: 0.88rem;
+    line-height: 1.55;
+  }
+  .acc-item.open .acc-body { display: block; }
+  .acc-body p { margin: 10px 0; color: var(--text); }
+  .acc-body p.muted { color: var(--text-dim); }
+  .acc-body strong { color: var(--gold-bright); }
+  .acc-body ul { margin: 10px 0; padding-left: 20px; }
+  .acc-body li { margin: 6px 0; }
+
+  /* Compact "entry" cards for classes / races / abilities */
+  .entry {
+    background: var(--bg-1);
+    border: 1px solid var(--edge);
+    border-left: 3px solid var(--gold);
+    border-radius: 8px;
+    padding: 9px 12px;
+    margin: 8px 0;
+  }
+  .entry .e-name { font-weight: 700; color: var(--gold-bright); letter-spacing: 0.5px; }
+  .entry .e-meta {
+    color: var(--text-dim);
+    font-size: 0.72rem;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin: 2px 0 4px;
+  }
+  .entry .e-desc { color: var(--text); font-size: 0.84rem; line-height: 1.45; }
+
+  .tip {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(58,47,82,0.5);
+  }
+  .tip:last-child { border-bottom: none; }
+  .tip .tip-ico { flex: 0 0 auto; font-size: 1.05rem; }
+
   .drawer-head {
     display: flex;
     align-items: center;
@@ -568,15 +682,21 @@
     header h1 { grid-area: title; font-size: 1.4rem; letter-spacing: 1.5px; }
     header p { grid-area: sub; font-size: 0.66rem; letter-spacing: 2.5px; }
 
-    /* History button: static, compact, tappable */
-    .history-btn {
+    /* Action buttons: static, compact, tappable */
+    .header-actions {
       grid-area: btn;
       position: static;
       top: auto; right: auto;
-      padding: 9px 12px;
+      gap: 6px;
+    }
+    .header-actions button {
+      padding: 9px 11px;
       min-height: 42px;
       font-size: 0.8rem;
+      gap: 6px;
     }
+    /* Save width: drop the history label, keep the icon + count */
+    .history-btn .btn-text { display: none; }
 
     /* Middle region: fills leftover space, never scrolls, centres its content */
     main {
@@ -677,9 +797,14 @@
   <header>
     <h1>Kostky Říše</h1>
     <p>Dungeons &amp; Dragons</p>
-    <button class="history-btn" id="openDrawer">
-      📜 Historie <span class="count" id="histCount">0</span>
-    </button>
+    <div class="header-actions">
+      <button class="guide-btn" id="openGuide" aria-label="Otevřít příručku">
+        📖 <span class="btn-text">Příručka</span>
+      </button>
+      <button class="history-btn" id="openDrawer" aria-label="Otevřít historii">
+        📜 <span class="btn-text">Historie</span> <span class="count" id="histCount">0</span>
+      </button>
+    </div>
   </header>
 
   <main>
@@ -710,6 +835,164 @@
 
   <!-- Drawer -->
   <div class="overlay" id="overlay"></div>
+
+  <!-- Guide / Příručka drawer (slides from the left) -->
+  <aside class="drawer left" id="guideDrawer" aria-hidden="true">
+    <div class="drawer-head">
+      <h2>Příručka D&amp;D</h2>
+      <button class="drawer-close" id="closeGuide" aria-label="Zavřít">×</button>
+    </div>
+    <div class="guide-body">
+      <div class="guide-intro">
+        Rychlý průvodce světem Dungeons&nbsp;&amp; Dragons. Klepni na sekci a rozbal si
+        pravidla, povolání, rasy i tipy. Ať tě provází dobré hody!
+      </div>
+
+      <!-- 1. Co je D&D -->
+      <div class="acc-item open">
+        <button class="acc-head"><span class="acc-ico">📖</span><span class="acc-title">Co je Dungeons &amp; Dragons</span><span class="acc-chev">▶</span></button>
+        <div class="acc-body">
+          <p><strong>Dungeons &amp; Dragons (D&amp;D)</strong> je stolní hra na hrdiny. Skupina hráčů
+          společně vypráví dobrodružný příběh — každý hráč ovládá jednu <strong>postavu</strong>
+          (hrdinu), zatímco <strong>Pán jeskyně</strong> (Dungeon Master, DM) řídí svět, příběh,
+          nepřátele a rozhoduje o pravidlech.</p>
+          <p>Není tu žádná herní deska ani vítěz — hraje se hlavně <strong>fantazií a vyprávěním</strong>.
+          Když je výsledek nejistý (souboj, přesvědčování, šplhání), rozhodne o něm <strong>hod kostkou</strong>.</p>
+          <p class="muted">Potřebuješ jen sadu kostek, tužku, papír s postavou, představivost a partu přátel.</p>
+        </div>
+      </div>
+
+      <!-- 2. Kostky -->
+      <div class="acc-item">
+        <button class="acc-head"><span class="acc-ico">🎲</span><span class="acc-title">Kostky a jak se hází</span><span class="acc-chev">▶</span></button>
+        <div class="acc-body">
+          <p>V D&amp;D se používá sedm typů kostek. Zapisují se jako <strong>d</strong> + počet stěn
+          (např. <strong>d20</strong> = dvacetistěnná kostka).</p>
+          <ul>
+            <li><strong>d4, d6, d8, d10, d12</strong> — zranění zbraní a kouzel</li>
+            <li><strong>d20</strong> — nejdůležitější: útoky, záchranné hody a ověření vlastností</li>
+            <li><strong>d100</strong> (d10 × 2) — procenta a náhodné tabulky</li>
+          </ul>
+          <p><strong>Zápis hodů:</strong> <em>2d6 + 3</em> znamená „hoď dvěma šestistěnnými kostkami
+          a přičti 3“. To zadáš pomocí <strong>Počtu kostek</strong> a <strong>Modifikátoru</strong> v aplikaci.</p>
+          <p><strong>Výhoda / Nevýhoda:</strong> při výhodě hodíš 2× d20 a bereš <strong>vyšší</strong>
+          číslo, při nevýhodě <strong>nižší</strong>. (V appce: nastav počet kostek na 2 u d20 a použij vyšší/nižší.)</p>
+          <p><strong>Kritický zásah / selhání:</strong> přirozená <strong>20</strong> na d20 je kritický
+          úspěch, přirozená <strong>1</strong> je kritické selhání — appka je zvýrazní zeleně a červeně.</p>
+        </div>
+      </div>
+
+      <!-- 3. Základní pravidla -->
+      <div class="acc-item">
+        <button class="acc-head"><span class="acc-ico">⚔️</span><span class="acc-title">Základní pravidla</span><span class="acc-chev">▶</span></button>
+        <div class="acc-body">
+          <p><strong>Základní vzorec:</strong> <em>d20 + modifikátor</em> vs. <strong>obtížnost (DC)</strong>.
+          Když výsledek dosáhne nebo přesáhne cílové číslo, akce se povede.</p>
+          <ul>
+            <li><strong>Ověření vlastnosti</strong> — hodíš d20 + příslušná vlastnost (např. Síla na šplhání).</li>
+            <li><strong>Útok</strong> — d20 + bonus k útoku vs. <strong>obranné číslo (AC)</strong> cíle. Pokud zasáhneš, hodíš zranění.</li>
+            <li><strong>Záchranný hod</strong> — d20 + vlastnost, abys odolal jedu, kouzlu, pádu apod.</li>
+          </ul>
+          <p><strong>Typická obtížnost (DC):</strong></p>
+          <ul>
+            <li>Velmi snadné — 5, Snadné — 10</li>
+            <li>Střední — 15, Těžké — 20</li>
+            <li>Velmi těžké — 25, Téměř nemožné — 30</li>
+          </ul>
+          <p><strong>Souboj po kolech:</strong> každý hodí <em>iniciativu</em> (d20 + Obratnost) a jedná
+          v pořadí. Ve svém tahu se můžeš pohnout a provést jednu akci (útok, kouzlo, útěk…).</p>
+          <p class="muted">Vždy platí zlaté pravidlo: rozhoduje Pán jeskyně a zábava u stolu.</p>
+        </div>
+      </div>
+
+      <!-- 4. Tvorba postavy — 4 volby (JaD) -->
+      <div class="acc-item">
+        <button class="acc-head"><span class="acc-ico">🎨</span><span class="acc-title">Tvorba postavy — 4 volby</span><span class="acc-chev">▶</span></button>
+        <div class="acc-body">
+          <p>V <strong>Jeskyních a dracích (JaD)</strong>, české verzi D&amp;D, vytvoříš postavu
+          pomocí <strong>čtyř voleb</strong>. Kniha se tě u každé zeptá a ty si vybereš — postava
+          tak vznikne krok za krokem.</p>
+
+          <div class="entry"><div class="e-name">1 · Skupinové zázemí</div><div class="e-meta">Volí celá družina společně</div><div class="e-desc">Jak se postavy znají a co je spojuje — jste hrdinové, členové řádu, zločinci, nebo cizinci svedení osudem dohromady? Toto je specialita JaD a určuje se jako první.</div></div>
+          <div class="entry"><div class="e-name">2 · Rasa</div><div class="e-meta">Původ a schopnosti</div><div class="e-desc">Biologický původ postavy — dává bonusy k vlastnostem, zvláštní rysy (např. vidění ve tmě) a kulturní zázemí. Např. člověk, elf, trpaslík…</div></div>
+          <div class="entry"><div class="e-name">3 · Osobní zázemí</div><div class="e-meta">Odkud pocházíš</div><div class="e-desc">Čím byla postava, než se vydala na dobrodružství. Dává zdatnosti v dovednostech, vybavení a kus příběhu — voják, učenec, poustevník, zloděj…</div></div>
+          <div class="entry"><div class="e-name">4 · Povolání</div><div class="e-meta">Co umíš v akci</div><div class="e-desc">Dobrodružná profese, která určuje bojové schopnosti, kouzla a zvláštní síly. Viz sekce „Povolání“ níže.</div></div>
+
+          <p class="muted">Nakonec postavě dáš jméno, vzhled, cíle, ideály a osobnost — a hrdina ožije.</p>
+          <p class="muted">Podle videa „Čtyři volby pro vytvoření postavy v JaD“.</p>
+        </div>
+      </div>
+
+      <!-- 5. Povolání / třídy -->
+      <div class="acc-item">
+        <button class="acc-head"><span class="acc-ico">🧙</span><span class="acc-title">Povolání (třídy postav)</span><span class="acc-chev">▶</span></button>
+        <div class="acc-body">
+          <p>Povolání určuje, co tvoje postava umí. Vyber si podle stylu, který tě baví.</p>
+
+          <div class="entry"><div class="e-name">Alchymista</div><div class="e-meta">Inteligence · k8 · Vynálezce</div><div class="e-desc">Povolání z Jeskyní a draků — tvoří lektvary, výbušniny a alchymické vynálezy, kterými podporuje družinu i drtí nepřátele.</div></div>
+          <div class="entry"><div class="e-name">Barbar</div><div class="e-meta">Síla · k12 životů · Válečník</div><div class="e-desc">Zuřivý bojovník, který v bitevním běsu drtí nepřátele a vydrží obrovské zranění.</div></div>
+          <div class="entry"><div class="e-name">Bard</div><div class="e-meta">Charisma · k8 · Kouzelník</div><div class="e-desc">Umělec a všeuměl — inspiruje spojence, kouzlí hudbou a vždycky má co říct.</div></div>
+          <div class="entry"><div class="e-name">Klerik</div><div class="e-meta">Moudrost · k8 · Kouzelník</div><div class="e-desc">Sluha božstva, léčí zraněné a sesílá svatá kouzla proti zlu.</div></div>
+          <div class="entry"><div class="e-name">Druid</div><div class="e-meta">Moudrost · k8 · Kouzelník</div><div class="e-desc">Ochránce přírody, dokáže se proměnit ve zvíře a ovládat živly.</div></div>
+          <div class="entry"><div class="e-name">Bojovník</div><div class="e-meta">Síla/Obratnost · k10 · Válečník</div><div class="e-desc">Mistr zbraní a taktiky. Nejvšestrannější bojová třída, ideální pro začátečníky.</div></div>
+          <div class="entry"><div class="e-name">Mnich</div><div class="e-meta">Obratnost/Moudrost · k8 · Válečník</div><div class="e-desc">Bojový umělec využívající vnitřní energii (ki) a rychlé údery holýma rukama.</div></div>
+          <div class="entry"><div class="e-name">Paladin</div><div class="e-meta">Síla/Charisma · k10 · Válečník</div><div class="e-desc">Svatý rytíř vázaný přísahou — kombinuje zbraně, léčení a boží tresty.</div></div>
+          <div class="entry"><div class="e-name">Hraničář</div><div class="e-meta">Obratnost/Moudrost · k10 · Lovec</div><div class="e-desc">Lovec z divočiny, mistr luku a stopování se zvířecím společníkem.</div></div>
+          <div class="entry"><div class="e-name">Zloděj (Tulák)</div><div class="e-meta">Obratnost · k8 · Šikula</div><div class="e-desc">Nenápadný specialista — pasti, zámky, skrývání a zákeřné údery ze stínů.</div></div>
+          <div class="entry"><div class="e-name">Čaroděj (Sorcerer)</div><div class="e-meta">Charisma · k6 · Kouzelník</div><div class="e-desc">Vrozená magie proudící v krvi, kterou tvaruje mocnými kouzly.</div></div>
+          <div class="entry"><div class="e-name">Černokněžník (Warlock)</div><div class="e-meta">Charisma · k8 · Kouzelník</div><div class="e-desc">Získal moc paktem s mocnou bytostí. Menší, ale silná kouzla.</div></div>
+          <div class="entry"><div class="e-name">Kouzelník (Wizard)</div><div class="e-meta">Inteligence · k6 · Kouzelník</div><div class="e-desc">Učený mág s knihou kouzel — nejširší arzenál magie ve hře.</div></div>
+        </div>
+      </div>
+
+      <!-- 6. Rasy -->
+      <div class="acc-item">
+        <button class="acc-head"><span class="acc-ico">🧝</span><span class="acc-title">Rasy</span><span class="acc-chev">▶</span></button>
+        <div class="acc-body">
+          <p>Rasa dává postavě vzhled, vlastnosti a schopnosti.</p>
+          <div class="entry"><div class="e-name">Člověk</div><div class="e-desc">Všestranný a přizpůsobivý — dobrá volba pro každé povolání.</div></div>
+          <div class="entry"><div class="e-name">Elf</div><div class="e-desc">Ladný, dlouhověký, bystrý a obratný. Vidí ve tmě a je odolný proti očarování.</div></div>
+          <div class="entry"><div class="e-name">Trpaslík</div><div class="e-desc">Houževnatý horník a válečník, odolný vůči jedu, mistr kamene a kovu.</div></div>
+          <div class="entry"><div class="e-name">Půlčík (Hobit)</div><div class="e-desc">Malý, mrštný a nečekaně statečný. Má štěstí a snadno se skryje.</div></div>
+          <div class="entry"><div class="e-name">Drakorozený</div><div class="e-desc">Potomek draků s dračím dechem a odolností vůči jednomu živlu.</div></div>
+          <div class="entry"><div class="e-name">Gnóm</div><div class="e-desc">Malý vynálezce a čtverák s bystrou myslí a odolností vůči magii.</div></div>
+          <div class="entry"><div class="e-name">Půlelf</div><div class="e-desc">Spojuje lidskou všestrannost s elfím půvabem a charismatem.</div></div>
+          <div class="entry"><div class="e-name">Půlork</div><div class="e-desc">Silný a nezdolný — ustojí smrtelné rány a v boji je zuřivý.</div></div>
+          <div class="entry"><div class="e-name">Tiefling</div><div class="e-desc">Potomek s démonickým dědictvím, odolný vůči ohni a s vrozenou magií.</div></div>
+        </div>
+      </div>
+
+      <!-- 7. Vlastnosti -->
+      <div class="acc-item">
+        <button class="acc-head"><span class="acc-ico">📊</span><span class="acc-title">Vlastnosti postavy</span><span class="acc-chev">▶</span></button>
+        <div class="acc-body">
+          <p>Každou postavu určuje šest vlastností. Z hodnoty se počítá <strong>modifikátor</strong>
+          (10–11 = 0, každé +2 body = +1), který přičítáš k hodům d20.</p>
+          <div class="entry"><div class="e-name">Síla (STR)</div><div class="e-desc">Fyzická moc — boj na blízko, zvedání, šplhání, tlačení.</div></div>
+          <div class="entry"><div class="e-name">Obratnost (DEX)</div><div class="e-desc">Rychlost a mrštnost — útoky na dálku, plížení, iniciativa, obrana.</div></div>
+          <div class="entry"><div class="e-name">Odolnost (CON)</div><div class="e-desc">Výdrž a zdraví — počet životů a odolnost proti vyčerpání a jedu.</div></div>
+          <div class="entry"><div class="e-name">Inteligence (INT)</div><div class="e-desc">Znalosti a logika — magie kouzelníků, pátrání, vědomosti.</div></div>
+          <div class="entry"><div class="e-name">Moudrost (WIS)</div><div class="e-desc">Vnímavost a intuice — všímavost, přežití, magie kleriků a druidů.</div></div>
+          <div class="entry"><div class="e-name">Charisma (CHA)</div><div class="e-desc">Osobnost a vůle — přesvědčování, klamání, magie bardů a čarodějů.</div></div>
+        </div>
+      </div>
+
+      <!-- 8. Tipy -->
+      <div class="acc-item">
+        <button class="acc-head"><span class="acc-ico">💡</span><span class="acc-title">Tipy pro hráče</span><span class="acc-chev">▶</span></button>
+        <div class="acc-body">
+          <div class="tip"><span class="tip-ico">🗣️</span><span>Popisuj, co chce tvoje postava udělat — ne čísla. Pán jeskyně ti řekne, na co hodit.</span></div>
+          <div class="tip"><span class="tip-ico">🎭</span><span>Nemusíš být hrdina bez chyby. Nejzábavnější postavy mají slabiny a osobnost.</span></div>
+          <div class="tip"><span class="tip-ico">🤝</span><span>D&amp;D je týmová hra. Spolupracuj — každé povolání zvládne něco jiného.</span></div>
+          <div class="tip"><span class="tip-ico">📝</span><span>Zapisuj si jména, úkoly a poklady. Příběh se táhne přes mnoho sezení.</span></div>
+          <div class="tip"><span class="tip-ico">🎲</span><span>Špatný hod není konec — často z něj vznikne nejlepší historka. Hoď a bav se.</span></div>
+          <div class="tip"><span class="tip-ico">❓</span><span>Nevíš, co dál? Zeptej se DM na okolí, prohledej místnost, promluv s postavami.</span></div>
+          <div class="tip"><span class="tip-ico">⚖️</span><span>Neznáš pravidlo? Nevadí. Rozhodne DM a hraje se dál — pravidla dohledáš potom.</span></div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
   <aside class="drawer" id="drawer" aria-hidden="true">
     <div class="drawer-head">
       <h2>Historie hodů</h2>
@@ -1053,19 +1336,50 @@
   // ---------- Drawer ----------
   const overlay = document.getElementById("overlay");
   const drawer = document.getElementById("drawer");
+  const guideDrawer = document.getElementById("guideDrawer");
+
   function openDrawer() {
+    closeGuide();
     drawer.classList.add("open");
     overlay.classList.add("open");
     drawer.setAttribute("aria-hidden", "false");
   }
   function closeDrawer() {
     drawer.classList.remove("open");
-    overlay.classList.remove("open");
     drawer.setAttribute("aria-hidden", "true");
+    syncOverlay();
   }
+  function openGuide() {
+    closeDrawer();
+    guideDrawer.classList.add("open");
+    overlay.classList.add("open");
+    guideDrawer.setAttribute("aria-hidden", "false");
+  }
+  function closeGuide() {
+    guideDrawer.classList.remove("open");
+    guideDrawer.setAttribute("aria-hidden", "true");
+    syncOverlay();
+  }
+  // Overlay stays visible while EITHER drawer is open
+  function syncOverlay() {
+    const anyOpen = drawer.classList.contains("open") || guideDrawer.classList.contains("open");
+    overlay.classList.toggle("open", anyOpen);
+  }
+  function closeAllDrawers() { closeDrawer(); closeGuide(); }
+
   document.getElementById("openDrawer").addEventListener("click", openDrawer);
   document.getElementById("closeDrawer").addEventListener("click", closeDrawer);
-  overlay.addEventListener("click", closeDrawer);
+  document.getElementById("openGuide").addEventListener("click", openGuide);
+  document.getElementById("closeGuide").addEventListener("click", closeGuide);
+  overlay.addEventListener("click", closeAllDrawers);
+
+  // ---------- Guide accordion ----------
+  guideDrawer.querySelectorAll(".acc-head").forEach((head) => {
+    head.addEventListener("click", () => {
+      head.parentElement.classList.toggle("open");
+      buzz(6);
+    });
+  });
 
   // ---------- Delete a single roll ----------
   historyList.addEventListener("click", (e) => {
@@ -1117,9 +1431,12 @@
     if (!inside) confirmDialog.close();
   });
 
-  // Keyboard: Esc closes drawer
+  // Keyboard: Esc closes whichever drawer is open
   document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && drawer.classList.contains("open")) closeDrawer();
+    if (e.key !== "Escape") return;
+    if (drawer.classList.contains("open") || guideDrawer.classList.contains("open")) {
+      closeAllDrawers();
+    }
   });
 
   // ---------- Persisted settings (dice count + modifier) ----------
