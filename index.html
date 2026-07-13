@@ -1,0 +1,1136 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0" />
+<meta name="theme-color" content="#0f0d1a" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<title>Kostky pro D&D</title>
+<style>
+  :root {
+    --bg-0: #0f0d1a;
+    --bg-1: #1a1526;
+    --bg-2: #241d33;
+    --edge: #3a2f52;
+    --gold: #d9b45a;
+    --gold-bright: #f5d787;
+    --crimson: #a02c3a;
+    --crimson-bright: #d1495b;
+    --text: #efe8dc;
+    --text-dim: #9a8fb0;
+    --face: #2b2340;
+    --face-lit: #3d3157;
+    --shadow: rgba(0, 0, 0, 0.55);
+    --drawer-w: 340px;
+  }
+
+  * {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html, body {
+    margin: 0;
+    min-height: 100%;
+    font-family: "Segoe UI", "Trebuchet MS", system-ui, sans-serif;
+    background:
+      radial-gradient(circle at 20% 15%, #241a38 0%, transparent 55%),
+      radial-gradient(circle at 85% 80%, #2a1522 0%, transparent 55%),
+      var(--bg-0);
+    background-attachment: fixed;
+    color: var(--text);
+    overflow-x: hidden;
+    overscroll-behavior-y: none;
+    text-size-adjust: 100%;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100dvh;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right)
+             env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+
+  /* Interactive elements: comfortable touch + no accidental selection/callouts */
+  button, .die {
+    touch-action: manipulation;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+  }
+
+  /* ---------- Header ---------- */
+  header {
+    text-align: center;
+    padding: 28px 16px 10px;
+    position: relative;
+  }
+  header h1 {
+    margin: 0;
+    font-size: clamp(1.8rem, 5vw, 2.8rem);
+    letter-spacing: 3px;
+    font-weight: 700;
+    background: linear-gradient(180deg, var(--gold-bright), var(--gold) 60%, #8a6d2c);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  }
+  header p {
+    margin: 4px 0 0;
+    color: var(--text-dim);
+    font-size: 0.85rem;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+  }
+
+  .history-btn {
+    position: absolute;
+    top: 24px;
+    right: 20px;
+    background: var(--bg-2);
+    border: 1px solid var(--edge);
+    color: var(--gold);
+    padding: 10px 16px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background 0.2s, transform 0.1s, border-color 0.2s;
+  }
+  .history-btn:hover { background: var(--face-lit); border-color: var(--gold); }
+  .history-btn:active { transform: scale(0.95); }
+  .history-btn .count {
+    background: var(--crimson);
+    color: #fff;
+    border-radius: 20px;
+    padding: 1px 8px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    min-width: 20px;
+    text-align: center;
+  }
+
+  /* ---------- Main layout ---------- */
+  main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px 16px 40px;
+    width: 100%;
+  }
+
+  /* ---------- Result banner ---------- */
+  .result-stage {
+    min-height: 150px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin: 6px 0 18px;
+  }
+  /* Shape of the last-rolled die, shown above the total.
+     Height is ALWAYS reserved so a roll never shifts the layout below it. */
+  .result-die {
+    height: 58px;
+    opacity: 0;
+    overflow: visible;
+    transform: scale(0.6);
+    transition: opacity 0.25s ease, transform 0.3s cubic-bezier(.3,.7,.4,1.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+  }
+  .result-die.show {
+    opacity: 1;
+    transform: scale(1);
+  }
+  .rd-inner { position: relative; width: 58px; height: 58px; }
+  .rd-inner svg { width: 100%; height: 100%; overflow: visible; }
+  .result-die .rd-shape { fill: url(#dieGrad); stroke: var(--gold); stroke-width: 2.5; }
+  .rd-label {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 0.92rem;
+    letter-spacing: 0.5px;
+    color: var(--gold-bright);
+    text-shadow: 0 1px 2px rgba(0,0,0,0.7);
+  }
+  .result-die.crit-hit .rd-shape { stroke: #6ee7a0; }
+  .result-die.crit-hit .rd-label { color: #6ee7a0; }
+  .result-die.crit-miss .rd-shape { stroke: var(--crimson-bright); }
+  .result-die.crit-miss .rd-label { color: var(--crimson-bright); }
+
+  .result-total {
+    font-size: clamp(3.5rem, 14vw, 6rem);
+    font-weight: 800;
+    line-height: 1;
+    color: var(--gold-bright);
+    text-shadow: 0 0 24px rgba(217, 180, 90, 0.35), 0 3px 4px rgba(0,0,0,0.6);
+    min-height: 1em;
+  }
+  .result-total.rolling { color: var(--text-dim); text-shadow: none; }
+  .result-total.crit-hit { color: #6ee7a0; text-shadow: 0 0 30px rgba(110, 231, 160, 0.6); }
+  .result-total.crit-miss { color: var(--crimson-bright); text-shadow: 0 0 30px rgba(209, 73, 91, 0.6); }
+  .result-label {
+    color: var(--text-dim);
+    font-size: 0.95rem;
+    letter-spacing: 2px;
+    min-height: 1.2em;
+    text-align: center;
+    padding: 0 10px;
+  }
+  .result-tag {
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    font-size: 0.9rem;
+  }
+  .result-tag.hit { color: #6ee7a0; }
+  .result-tag.miss { color: var(--crimson-bright); }
+
+  /* ---------- Dice tray ---------- */
+  .tray {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 18px;
+    width: 100%;
+    max-width: 760px;
+  }
+
+  .die {
+    position: relative;
+    background: linear-gradient(160deg, var(--face-lit), var(--face));
+    border: 1px solid var(--edge);
+    border-radius: 16px;
+    padding: 18px 10px 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: transform 0.12s ease, box-shadow 0.2s, border-color 0.2s;
+    box-shadow: 0 6px 16px var(--shadow), inset 0 1px 0 rgba(255,255,255,0.05);
+    user-select: none;
+  }
+  .die:hover {
+    transform: translateY(-4px);
+    border-color: var(--gold);
+    box-shadow: 0 12px 24px var(--shadow), 0 0 18px rgba(217,180,90,0.15);
+  }
+  .die:active { transform: translateY(-1px) scale(0.98); }
+
+  /* Last-rolled die stays highlighted */
+  .die.active {
+    border-color: var(--gold);
+    background: linear-gradient(160deg, #4a3d68, #34294d);
+    box-shadow: 0 8px 20px var(--shadow), 0 0 0 1px var(--gold) inset, 0 0 22px rgba(217,180,90,0.28);
+  }
+  .die.active .die-name { color: var(--gold-bright); }
+  .die.active.crit-hit {
+    border-color: #6ee7a0;
+    box-shadow: 0 8px 20px var(--shadow), 0 0 0 1px #6ee7a0 inset, 0 0 24px rgba(110,231,160,0.4);
+  }
+  .die.active.crit-hit .die-name { color: #6ee7a0; }
+  .die.active.crit-miss {
+    border-color: var(--crimson-bright);
+    box-shadow: 0 8px 20px var(--shadow), 0 0 0 1px var(--crimson-bright) inset, 0 0 24px rgba(209,73,91,0.4);
+  }
+  .die.active.crit-miss .die-name { color: var(--crimson-bright); }
+
+  .die-name {
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: var(--gold);
+    font-size: 1rem;
+  }
+  .die-range { color: var(--text-dim); font-size: 0.72rem; letter-spacing: 1px; }
+
+  /* Polyhedral SVG shape */
+  .die-shape {
+    width: 74px;
+    height: 74px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+  .die-shape svg { width: 100%; height: 100%; overflow: visible; }
+  .die-face-fill { fill: url(#dieGrad); stroke: var(--gold); stroke-width: 2; }
+  .die-shape .die-value {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 1.4rem;
+    color: var(--text);
+    text-shadow: 0 1px 2px rgba(0,0,0,0.7);
+    pointer-events: none;
+  }
+
+  .die.spin .die-shape { animation: spinRoll 0.6s cubic-bezier(.3,.7,.4,1); }
+  @keyframes spinRoll {
+    0%   { transform: rotate(0deg) scale(1); }
+    30%  { transform: rotate(200deg) scale(1.15); }
+    70%  { transform: rotate(340deg) scale(1.05); }
+    100% { transform: rotate(360deg) scale(1); }
+  }
+
+  /* ---------- Controls row ---------- */
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    max-width: 760px;
+    margin: 22px auto 24px;
+    padding: 0 16px;
+  }
+  .qty-control {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--bg-2);
+    border: 1px solid var(--edge);
+    border-radius: 12px;
+    padding: 8px 12px;
+  }
+  .qty-control label { color: var(--text-dim); font-size: 0.8rem; letter-spacing: 1px; }
+  .qty-control button {
+    width: 30px; height: 30px;
+    border-radius: 8px;
+    border: 1px solid var(--edge);
+    background: var(--face);
+    color: var(--gold);
+    font-size: 1.2rem;
+    cursor: pointer;
+    line-height: 1;
+  }
+  .qty-control button:hover { background: var(--face-lit); }
+  /* Shared numeric input that stretches to fill the space between −/+ */
+  .num-input {
+    flex: 1 1 auto;
+    width: 100%;
+    min-width: 0;
+    background: var(--face);
+    border: 1px solid var(--edge);
+    color: var(--text);
+    border-radius: 8px;
+    padding: 8px 4px;
+    text-align: center;
+    font-size: 1.2rem;
+    font-weight: 700;
+  }
+  .num-input:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 2px rgba(217,180,90,0.2); }
+  /* Hide native number-input spinners */
+  .num-input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+  .num-input[type="number"]::-webkit-outer-spin-button,
+  .num-input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  .clear-selection {
+    background: transparent;
+    border: 1px solid var(--edge);
+    color: var(--text-dim);
+    border-radius: 10px;
+    padding: 9px 14px;
+    cursor: pointer;
+    font-size: 0.82rem;
+  }
+  .clear-selection:hover { border-color: var(--crimson); color: var(--crimson-bright); }
+
+  /* ---------- Drawer ---------- */
+  .overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s;
+    z-index: 40;
+  }
+  .overlay.open { opacity: 1; pointer-events: auto; }
+
+  .drawer {
+    position: fixed;
+    top: 0; right: 0;
+    height: 100%;
+    width: var(--drawer-w);
+    max-width: 90vw;
+    background: linear-gradient(180deg, var(--bg-1), var(--bg-0));
+    border-left: 1px solid var(--edge);
+    box-shadow: -8px 0 30px rgba(0,0,0,0.5);
+    transform: translateX(100%);
+    transition: transform 0.3s cubic-bezier(.4,0,.2,1);
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+  }
+  .drawer.open { transform: translateX(0); }
+
+  .drawer-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px;
+    border-bottom: 1px solid var(--edge);
+  }
+  .drawer-head h2 {
+    margin: 0;
+    font-size: 1.2rem;
+    color: var(--gold);
+    letter-spacing: 2px;
+  }
+  .drawer-close {
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    font-size: 1.6rem;
+    cursor: pointer;
+    line-height: 1;
+  }
+  .drawer-close:hover { color: var(--text); }
+
+  .history-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .history-list::-webkit-scrollbar { width: 8px; }
+  .history-list::-webkit-scrollbar-thumb { background: var(--edge); border-radius: 4px; }
+
+  .hist-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--bg-2);
+    border: 1px solid var(--edge);
+    border-left: 3px solid var(--gold);
+    border-radius: 10px;
+    padding: 10px 12px;
+    animation: slideIn 0.25s ease;
+  }
+  .hist-item.crit-hit { border-left-color: #6ee7a0; }
+  .hist-item.crit-miss { border-left-color: var(--crimson-bright); }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(20px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+  .hist-item.removing {
+    animation: slideOut 0.24s ease forwards;
+    overflow: hidden;
+  }
+  @keyframes slideOut {
+    to { opacity: 0; transform: translateX(40px); max-height: 0; padding-top: 0; padding-bottom: 0; margin-top: -10px; }
+  }
+
+  /* Die shape on the left of each history row */
+  .hist-shape { flex: 0 0 auto; width: 38px; height: 38px; }
+  .hist-shape svg { width: 100%; height: 100%; overflow: visible; }
+  .hist-shape polygon { fill: url(#dieGrad); stroke: var(--gold); stroke-width: 3.5; }
+  .hist-item.crit-hit .hist-shape polygon { stroke: #6ee7a0; }
+  .hist-item.crit-miss .hist-shape polygon { stroke: var(--crimson-bright); }
+
+  .hist-body { flex: 1 1 auto; min-width: 0; }
+
+  .hist-delete {
+    flex: 0 0 auto;
+    margin-left: 6px;
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    border: 1px solid var(--edge);
+    background: var(--face);
+    color: var(--text-dim);
+    font-size: 1.15rem;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+  }
+  .hist-delete:hover { background: rgba(160,44,58,0.2); color: var(--crimson-bright); border-color: var(--crimson); }
+  .hist-delete:active { transform: scale(0.9); }
+  .hist-row1 {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 8px;
+  }
+  .hist-notation { font-weight: 700; color: var(--text); letter-spacing: 1px; }
+  .hist-total {
+    font-weight: 800;
+    font-size: 1.3rem;
+    color: var(--gold-bright);
+  }
+  .hist-item.crit-hit .hist-total { color: #6ee7a0; }
+  .hist-item.crit-miss .hist-total { color: var(--crimson-bright); }
+  .hist-detail { color: var(--text-dim); font-size: 0.78rem; margin-top: 4px; word-break: break-word; }
+  .hist-time { color: var(--text-dim); font-size: 0.68rem; margin-top: 4px; opacity: 0.7; }
+
+  .history-empty {
+    text-align: center;
+    color: var(--text-dim);
+    padding: 40px 20px;
+    font-style: italic;
+  }
+
+  .drawer-foot {
+    padding: 16px;
+    border-top: 1px solid var(--edge);
+  }
+  .clear-history-btn {
+    width: 100%;
+    background: transparent;
+    border: 1px solid var(--crimson);
+    color: var(--crimson-bright);
+    padding: 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    letter-spacing: 1px;
+    transition: background 0.2s;
+  }
+  .clear-history-btn:hover:not(:disabled) { background: rgba(160,44,58,0.15); }
+  .clear-history-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* ---------- Confirm dialog ---------- */
+  dialog {
+    border: 1px solid var(--edge);
+    border-radius: 16px;
+    background: var(--bg-1);
+    color: var(--text);
+    padding: 0;
+    max-width: 380px;
+    width: 90%;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+  }
+  dialog::backdrop { background: rgba(0,0,0,0.6); backdrop-filter: blur(2px); }
+  .dialog-body { padding: 26px 24px 10px; text-align: center; }
+  .dialog-body h3 { margin: 0 0 10px; color: var(--gold); letter-spacing: 1px; }
+  .dialog-body p { margin: 0; color: var(--text-dim); line-height: 1.5; font-size: 0.92rem; }
+  .dialog-actions {
+    display: flex;
+    gap: 12px;
+    padding: 20px 24px 24px;
+  }
+  .dialog-actions button {
+    flex: 1;
+    padding: 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    letter-spacing: 1px;
+    border: 1px solid var(--edge);
+  }
+  .btn-cancel { background: var(--face); color: var(--text); }
+  .btn-cancel:hover { background: var(--face-lit); }
+  .btn-danger { background: var(--crimson); color: #fff; border-color: var(--crimson); }
+  .btn-danger:hover { background: var(--crimson-bright); }
+
+  /* ============ PHONE OPTIMIZATION — single-screen, no-scroll ============ */
+  @media (max-width: 640px) {
+    /* Lock the page to the viewport; the layout fits without scrolling */
+    html, body { height: 100dvh; }
+    body { overflow: hidden; }
+
+    header {
+      flex: 0 0 auto;
+      padding: 12px 14px 4px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      grid-template-areas: "title btn" "sub sub";
+      align-items: center;
+      gap: 2px 8px;
+      text-align: left;
+    }
+    header h1 { grid-area: title; font-size: 1.4rem; letter-spacing: 1.5px; }
+    header p { grid-area: sub; font-size: 0.66rem; letter-spacing: 2.5px; }
+
+    /* History button: static, compact, tappable */
+    .history-btn {
+      grid-area: btn;
+      position: static;
+      top: auto; right: auto;
+      padding: 9px 12px;
+      min-height: 42px;
+      font-size: 0.8rem;
+    }
+
+    /* Middle region: fills leftover space, never scrolls, centres its content */
+    main {
+      flex: 1 1 auto;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 6px;
+      padding: 4px 12px 6px;
+      overflow: hidden;
+    }
+
+    .result-stage { flex: 0 0 auto; min-height: 0; gap: 3px; margin: 0 0 4px; }
+    .result-total { font-size: clamp(2.2rem, 14vw, 3.6rem); }
+    .result-label { font-size: 0.8rem; }
+    .result-die { height: 42px; }
+    .rd-inner { width: 42px; height: 42px; }
+
+    /* 3 dice per row; the grid takes remaining space and the rows share it */
+    .tray {
+      flex: 0 1 auto;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      max-width: 100%;
+    }
+    .die { padding: 8px 4px 6px; border-radius: 12px; gap: 3px; }
+    .die-name { font-size: 0.85rem; letter-spacing: 1px; }
+    .die-shape { width: clamp(38px, 12vw, 50px); height: clamp(38px, 12vw, 50px); }
+    .die-shape .die-value { font-size: 1.05rem; }
+    .die-range { font-size: 0.6rem; }
+    /* Kill hover-lift on touch (it sticks after tap); use press feedback instead */
+    .die:hover { transform: none; box-shadow: 0 6px 16px var(--shadow); border-color: var(--edge); }
+    .die:active { transform: scale(0.94); border-color: var(--gold); }
+    .die.active:active { border-color: var(--gold); }
+
+    /* Controls: pinned footer in normal flow — no overlap with the tray */
+    .controls {
+      flex: 0 0 auto;
+      margin: 0;
+      padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+      background: var(--bg-1);
+      border-top: 1px solid var(--edge);
+      gap: 8px;
+      max-width: none;
+    }
+    .qty-control { padding: 5px 10px; flex: 1 1 100%; justify-content: space-between; min-height: 44px; }
+    .qty-control label { font-size: 0.72rem; flex: 0 0 84px; } /* fixed width → inputs align across rows */
+    .qty-control button { width: 38px; height: 38px; font-size: 1.4rem; }
+    /* Modifier spans full width like the dice-count row */
+    .mod-control { flex: 1 1 100%; }
+    .num-input { min-height: 38px; font-size: 1.05rem; }
+    #rollLast { flex: 1 1 100%; padding: 11px; min-height: 44px; font-size: 0.95rem; }
+
+    /* Drawer near full-width */
+    .drawer { width: 100%; max-width: 100%; border-left: none; }
+    .drawer-head { padding: 16px calc(16px + env(safe-area-inset-right)) 16px 16px; }
+    .drawer-close { padding: 6px; min-width: 44px; min-height: 44px; font-size: 2rem; }
+    .drawer-foot { padding: 14px 16px calc(14px + env(safe-area-inset-bottom)); }
+
+    /* Bigger tap target for per-item delete */
+    .hist-item { padding-right: 48px; }
+    .hist-delete { width: 34px; height: 34px; font-size: 1.3rem; top: 10px; right: 10px; }
+  }
+
+  /* Very narrow: shrink shapes a touch more */
+  @media (max-width: 340px) {
+    .die-name { font-size: 0.78rem; }
+    .tray { gap: 6px; }
+  }
+
+  /* Short viewports (small phones / landscape): reclaim vertical space */
+  @media (max-width: 640px) and (max-height: 700px) {
+    .result-die { height: 34px; }
+    .rd-inner { width: 34px; height: 34px; }
+    .result-total { font-size: clamp(1.9rem, 11vw, 2.8rem); }
+    .die-shape { width: clamp(32px, 10vw, 44px); height: clamp(32px, 10vw, 44px); }
+    .die { padding: 6px 4px 5px; }
+  }
+
+  /* Landscape phones: lay all 7 dice in one row so everything still fits */
+  @media (max-width: 900px) and (max-height: 480px) and (orientation: landscape) {
+    .tray { grid-template-columns: repeat(7, 1fr); }
+    .die-shape { width: clamp(28px, 6vw, 40px); height: clamp(28px, 6vw, 40px); }
+    .result-die { display: none; }
+  }
+</style>
+</head>
+<body>
+  <!-- Shared SVG gradient def -->
+  <svg width="0" height="0" style="position:absolute">
+    <defs>
+      <linearGradient id="dieGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#4a3d68" />
+        <stop offset="100%" stop-color="#2b2340" />
+      </linearGradient>
+    </defs>
+  </svg>
+
+  <header>
+    <h1>Kostky Říše</h1>
+    <p>Dungeons &amp; Dragons</p>
+    <button class="history-btn" id="openDrawer">
+      📜 Historie <span class="count" id="histCount">0</span>
+    </button>
+  </header>
+
+  <main>
+    <div class="result-stage">
+      <div class="result-die" id="resultDie" aria-hidden="true"></div>
+      <div class="result-total" id="resultTotal">—</div>
+      <div class="result-label" id="resultLabel">Vyber si kostku a nech rozhodnout osud</div>
+    </div>
+
+    <div class="tray" id="tray"></div>
+  </main>
+
+  <div class="controls">
+    <div class="qty-control">
+      <label>Počet kostek</label>
+      <button id="qtyMinus" aria-label="Ubrat kostku">−</button>
+      <input type="number" class="num-input" id="qtyVal" value="1" min="1" max="20" step="1" inputmode="numeric" />
+      <button id="qtyPlus" aria-label="Přidat kostku">+</button>
+    </div>
+    <div class="qty-control mod-control">
+      <label>Modifikátor</label>
+      <button id="modMinus" aria-label="Snížit modifikátor">−</button>
+      <input type="number" class="num-input" id="modifier" value="0" step="1" inputmode="numeric" />
+      <button id="modPlus" aria-label="Zvýšit modifikátor">+</button>
+    </div>
+    <button class="clear-selection" id="rollLast" title="Hodit znovu poslední kostkou">🎲 Hodit znovu</button>
+  </div>
+
+  <!-- Drawer -->
+  <div class="overlay" id="overlay"></div>
+  <aside class="drawer" id="drawer" aria-hidden="true">
+    <div class="drawer-head">
+      <h2>Historie hodů</h2>
+      <button class="drawer-close" id="closeDrawer" aria-label="Zavřít">×</button>
+    </div>
+    <div class="history-list" id="historyList"></div>
+    <div class="drawer-foot">
+      <button class="clear-history-btn" id="clearHistory">🗑 Smazat historii</button>
+    </div>
+  </aside>
+
+  <!-- Confirm dialog -->
+  <dialog id="confirmDialog">
+    <div class="dialog-body">
+      <h3>Smazat historii?</h3>
+      <p>Tímto trvale odstraníš všech <strong id="clearCount">0</strong> zaznamenaných hodů. Tuto akci nelze vrátit zpět.</p>
+    </div>
+    <div class="dialog-actions">
+      <button class="btn-cancel" id="cancelClear">Zrušit</button>
+      <button class="btn-danger" id="confirmClear">Smazat vše</button>
+    </div>
+  </dialog>
+
+<script>
+(function () {
+  "use strict";
+
+  const STORAGE_KEY = "dnd_dice_history_v1";
+  const MAX_HISTORY = 200;
+
+  // Polyhedral dice definitions. Each shape is an SVG polygon approximating the real die.
+  const DICE = [
+    { sides: 4,   name: "d4",   points: "40,4 76,70 4,70" },                                   // triangle
+    { sides: 6,   name: "d6",   points: "10,10 70,10 70,70 10,70" },                            // square
+    { sides: 8,   name: "d8",   points: "40,2 74,40 40,78 6,40" },                              // diamond
+    { sides: 10,  name: "d10",  points: "40,2 74,34 62,74 18,74 6,34" },                        // pentagon-ish
+    { sides: 12,  name: "d12",  points: "40,4 66,16 78,42 66,68 40,78 14,68 2,42 14,16" },      // dodeca (octagon proxy)
+    { sides: 20,  name: "d20",  points: "40,3 70,20 70,56 40,75 10,56 10,20" },                 // hexagon
+    { sides: 100, name: "d100", points: "40,2 74,34 62,74 18,74 6,34" }                         // percentile
+  ];
+
+  let selected = DICE[5]; // default d20
+  let quantity = 1;
+  let history = [];
+
+  // ---------- DOM ----------
+  const tray = document.getElementById("tray");
+  const resultTotal = document.getElementById("resultTotal");
+  const resultLabel = document.getElementById("resultLabel");
+  const resultDie = document.getElementById("resultDie");
+  const qtyVal = document.getElementById("qtyVal");
+  const modifierInput = document.getElementById("modifier");
+  const histCountEl = document.getElementById("histCount");
+  const historyList = document.getElementById("historyList");
+  const clearCountEl = document.getElementById("clearCount");
+  const clearHistoryBtn = document.getElementById("clearHistory");
+  const confirmDialog = document.getElementById("confirmDialog");
+
+  // ---------- Build dice tray ----------
+  DICE.forEach((die) => {
+    const el = document.createElement("div");
+    el.className = "die";
+    el.dataset.name = die.name;
+    el.innerHTML = `
+      <div class="die-name">${die.name}</div>
+      <div class="die-shape">
+        <svg viewBox="0 0 80 80" aria-hidden="true">
+          <polygon class="die-face-fill" points="${die.points}" />
+        </svg>
+        <div class="die-value">${die.name === "d100" ? "%" : die.sides}</div>
+      </div>
+      <div class="die-range">1 – ${die.sides}</div>
+    `;
+    el.addEventListener("click", () => rollDie(die, el));
+    tray.appendChild(el);
+  });
+
+  // ---------- Haptics ----------
+  function buzz(pattern) {
+    if (navigator.vibrate) {
+      try { navigator.vibrate(pattern); } catch (e) { /* ignore */ }
+    }
+  }
+
+  // ---------- Result die badge ----------
+  function showResultDie(die, qty) {
+    const label = qty > 1 ? qty + die.name : die.name;
+    resultDie.innerHTML =
+      '<div class="rd-inner">' +
+        '<svg viewBox="0 0 80 80" aria-hidden="true">' +
+          '<polygon class="rd-shape" points="' + die.points + '" />' +
+        '</svg>' +
+        '<span class="rd-label">' + label + '</span>' +
+      '</div>';
+    resultDie.classList.add("show");
+  }
+
+  // ---------- Rolling ----------
+  function rand(sides) {
+    if (window.crypto && window.crypto.getRandomValues) {
+      const a = new Uint32Array(1);
+      window.crypto.getRandomValues(a);
+      return (a[0] % sides) + 1;
+    }
+    return Math.floor(Math.random() * sides) + 1;
+  }
+
+  function rollDie(die, el) {
+    selected = die;
+    const shapeEl = el.querySelector(".die-shape");
+    const valueEl = el.querySelector(".die-value");
+
+    // spin animation
+    el.classList.remove("spin");
+    void el.offsetWidth; // reflow to restart animation
+    el.classList.add("spin");
+
+    // haptic "tumble" while the die spins (stutter pattern)
+    buzz([12, 40, 10, 40, 8]);
+
+    setQty(parseInt(qtyVal.value, 10)); // normalize + snap field to a valid value
+    const qty = quantity;
+    const mod = parseInt(modifierInput.value, 10) || 0;
+
+    // Highlight this die as the active/last-rolled one (clear crit state for now)
+    tray.querySelectorAll(".die").forEach((d) => d.classList.remove("active", "crit-hit", "crit-miss"));
+    el.classList.add("active");
+
+    // Show the rolled die's shape in the result banner
+    resultDie.classList.remove("crit-hit", "crit-miss");
+    showResultDie(die, qty);
+
+    resultTotal.textContent = "…";
+    resultTotal.className = "result-total rolling";
+    resultLabel.textContent = "Házím...";
+
+    // quick number-flicker while spinning
+    let flicks = 0;
+    const flicker = setInterval(() => {
+      valueEl.textContent = rand(die.sides);
+      flicks++;
+      if (flicks > 6) clearInterval(flicker);
+    }, 70);
+
+    setTimeout(() => {
+      clearInterval(flicker);
+      const rolls = [];
+      for (let i = 0; i < qty; i++) rolls.push(rand(die.sides));
+      const sum = rolls.reduce((a, b) => a + b, 0);
+      const total = sum + mod;
+
+      valueEl.textContent = rolls[rolls.length - 1];
+      showResult(die, rolls, mod, sum, total, qty);
+      recordRoll(die, rolls, mod, total, qty);
+
+      // haptic on landing — emphatic for crits
+      const crit = critClass(die, rolls, qty);
+      if (crit === "crit-hit") buzz([0, 60, 50, 60, 50, 120]);
+      else if (crit === "crit-miss") buzz([0, 200]);
+      else buzz(35);
+    }, 600);
+  }
+
+  function critClass(die, rolls, qty) {
+    if (die.sides === 20 && qty === 1) {
+      if (rolls[0] === 20) return "crit-hit";
+      if (rolls[0] === 1) return "crit-miss";
+    }
+    return "";
+  }
+
+  function notation(die, qty, mod) {
+    let s = `${qty}${die.name}`;
+    if (mod > 0) s += ` + ${mod}`;
+    else if (mod < 0) s += ` − ${Math.abs(mod)}`;
+    return s;
+  }
+
+  function showResult(die, rolls, mod, sum, total, qty) {
+    const crit = critClass(die, rolls, qty);
+    resultTotal.textContent = total;
+    resultTotal.className = "result-total" + (crit ? " " + crit : "");
+
+    // Colour the result-die badge and the highlighted tray die on a crit
+    resultDie.classList.remove("crit-hit", "crit-miss");
+    if (crit) resultDie.classList.add(crit);
+    const activeDie = tray.querySelector(".die.active");
+    if (activeDie) {
+      activeDie.classList.remove("crit-hit", "crit-miss");
+      if (crit) activeDie.classList.add(crit);
+    }
+
+    let label = notation(die, qty, mod);
+    if (qty > 1 || mod !== 0) {
+      label += `  →  [${rolls.join(", ")}]`;
+      if (mod !== 0) label += ` ${mod > 0 ? "+" : "−"} ${Math.abs(mod)}`;
+      label += ` = ${total}`;
+    }
+    if (crit === "crit-hit") {
+      label = `<span class="result-tag hit">Kritický zásah!</span> — ` + label;
+    } else if (crit === "crit-miss") {
+      label = `<span class="result-tag miss">Kritické selhání!</span> — ` + label;
+    }
+    resultLabel.innerHTML = label;
+  }
+
+  // ---------- History ----------
+  function loadHistory() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      history = raw ? JSON.parse(raw) : [];
+      if (!Array.isArray(history)) history = [];
+      // Backfill ids for entries saved before per-item delete existed
+      history.forEach((h, i) => {
+        if (!h.id) h.id = "legacy-" + i + "-" + (h.ts || Date.now());
+      });
+    } catch (e) {
+      history = [];
+    }
+    renderHistory();
+  }
+
+  function saveHistory() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
+    } catch (e) { /* storage full / unavailable — ignore */ }
+  }
+
+  // Look up a die's polygon by its name (e.g. "d8"); falls back to parsing the
+  // notation for legacy history entries that didn't store the die name.
+  function pointsForEntry(h) {
+    let name = h.die;
+    if (!name && h.notation) {
+      const m = h.notation.match(/d\d+/);
+      if (m) name = m[0];
+    }
+    const d = DICE.find((x) => x.name === name);
+    return (d || DICE[1]).points; // fallback: d6 square
+  }
+
+  function recordRoll(die, rolls, mod, total, qty) {
+    const entry = {
+      id: (Date.now().toString(36) + Math.random().toString(36).slice(2, 7)),
+      die: die.name,
+      notation: notation(die, qty, mod),
+      rolls: rolls,
+      mod: mod,
+      total: total,
+      crit: critClass(die, rolls, qty),
+      ts: Date.now()
+    };
+    history.unshift(entry);
+    if (history.length > MAX_HISTORY) history.length = MAX_HISTORY;
+    saveHistory();
+    renderHistory();
+  }
+
+  function formatTime(ts) {
+    const d = new Date(ts);
+    return d.toLocaleString("cs-CZ", {
+      day: "numeric", month: "short",
+      hour: "2-digit", minute: "2-digit"
+    });
+  }
+
+  function renderHistory() {
+    histCountEl.textContent = history.length;
+    clearCountEl.textContent = history.length;
+    clearHistoryBtn.disabled = history.length === 0;
+
+    if (history.length === 0) {
+      historyList.innerHTML = `<div class="history-empty">Zatím žádné hody.<br>Tvoje legenda čeká.</div>`;
+      return;
+    }
+
+    historyList.innerHTML = history.map((h) => {
+      const critCls = h.crit ? " " + h.crit : "";
+      let detail = `Hozeno [${h.rolls.join(", ")}]`;
+      if (h.mod !== 0) detail += ` ${h.mod > 0 ? "+" : "−"} ${Math.abs(h.mod)}`;
+      let tag = "";
+      if (h.crit === "crit-hit") tag = " ⚔️ Kritický zásah";
+      else if (h.crit === "crit-miss") tag = " 💀 Kritické selhání";
+      const points = pointsForEntry(h);
+      return `
+        <div class="hist-item${critCls}">
+          <div class="hist-shape" aria-hidden="true">
+            <svg viewBox="0 0 80 80"><polygon points="${points}" /></svg>
+          </div>
+          <div class="hist-body">
+            <div class="hist-row1">
+              <span class="hist-notation">${h.notation}${tag}</span>
+              <span class="hist-total">${h.total}</span>
+            </div>
+            <div class="hist-detail">${detail}</div>
+            <div class="hist-time">${formatTime(h.ts)}</div>
+          </div>
+          <button class="hist-delete" data-id="${h.id}" aria-label="Smazat tento hod" title="Smazat tento hod">×</button>
+        </div>`;
+    }).join("");
+  }
+
+  // ---------- Quantity ----------
+  function setQty(n) {
+    if (isNaN(n)) n = 1;
+    quantity = Math.max(1, Math.min(20, Math.round(n)));
+    qtyVal.value = quantity;
+  }
+  document.getElementById("qtyPlus").addEventListener("click", () => { setQty(quantity + 1); buzz(8); });
+  document.getElementById("qtyMinus").addEventListener("click", () => { setQty(quantity - 1); buzz(8); });
+  // Keep manual entry clean + clamped, but track raw typing live
+  qtyVal.addEventListener("input", () => {
+    const n = parseInt(qtyVal.value, 10);
+    if (!isNaN(n)) quantity = Math.max(1, Math.min(20, n));
+  });
+  qtyVal.addEventListener("change", () => setQty(parseInt(qtyVal.value, 10)));
+
+  // ---------- Modifier ----------
+  function setMod(n) {
+    if (isNaN(n)) n = 0;
+    n = Math.max(-99, Math.min(99, Math.round(n)));
+    modifierInput.value = n;
+  }
+  document.getElementById("modPlus").addEventListener("click", () => {
+    setMod((parseInt(modifierInput.value, 10) || 0) + 1);
+    buzz(8);
+  });
+  document.getElementById("modMinus").addEventListener("click", () => {
+    setMod((parseInt(modifierInput.value, 10) || 0) - 1);
+    buzz(8);
+  });
+  // Keep manual entry clean + clamped
+  modifierInput.addEventListener("change", () => setMod(parseInt(modifierInput.value, 10)));
+
+  document.getElementById("rollLast").addEventListener("click", () => {
+    const el = tray.querySelector(`.die[data-name="${selected.name}"]`);
+    if (el) rollDie(selected, el);
+  });
+
+  // ---------- Drawer ----------
+  const overlay = document.getElementById("overlay");
+  const drawer = document.getElementById("drawer");
+  function openDrawer() {
+    drawer.classList.add("open");
+    overlay.classList.add("open");
+    drawer.setAttribute("aria-hidden", "false");
+  }
+  function closeDrawer() {
+    drawer.classList.remove("open");
+    overlay.classList.remove("open");
+    drawer.setAttribute("aria-hidden", "true");
+  }
+  document.getElementById("openDrawer").addEventListener("click", openDrawer);
+  document.getElementById("closeDrawer").addEventListener("click", closeDrawer);
+  overlay.addEventListener("click", closeDrawer);
+
+  // ---------- Delete a single roll ----------
+  historyList.addEventListener("click", (e) => {
+    const btn = e.target.closest(".hist-delete");
+    if (!btn) return;
+    const id = btn.dataset.id;
+    const item = btn.closest(".hist-item");
+
+    let done = false;
+    const removeIt = () => {
+      if (done) return;
+      done = true;
+      history = history.filter((h) => h.id !== id);
+      saveHistory();
+      renderHistory();
+    };
+
+    // Animate out, then remove
+    if (item) {
+      buzz(15);
+      item.classList.add("removing");
+      item.addEventListener("animationend", removeIt, { once: true });
+      // Fallback in case animationend doesn't fire
+      setTimeout(removeIt, 260);
+    } else {
+      removeIt();
+    }
+  });
+
+  // ---------- Clear history + confirm dialog ----------
+  clearHistoryBtn.addEventListener("click", () => {
+    if (history.length === 0) return;
+    clearCountEl.textContent = history.length;
+    confirmDialog.showModal();
+  });
+  document.getElementById("cancelClear").addEventListener("click", () => confirmDialog.close());
+  document.getElementById("confirmClear").addEventListener("click", () => {
+    history = [];
+    saveHistory();
+    renderHistory();
+    confirmDialog.close();
+  });
+
+  // Close dialog on backdrop click
+  confirmDialog.addEventListener("click", (e) => {
+    const rect = confirmDialog.getBoundingClientRect();
+    const inside = e.clientX >= rect.left && e.clientX <= rect.right &&
+                   e.clientY >= rect.top && e.clientY <= rect.bottom;
+    if (!inside) confirmDialog.close();
+  });
+
+  // Keyboard: Esc closes drawer
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && drawer.classList.contains("open")) closeDrawer();
+  });
+
+  // ---------- Init ----------
+  loadHistory();
+})();
+</script>
+</body>
+</html>
