@@ -555,37 +555,23 @@
     background: linear-gradient(180deg, var(--bg-1), var(--bg-0));
     border-bottom: 1px solid var(--edge);
   }
-  .guide-pane-head {
+  /* Same head styling as .dice-pane-head and .sheet-head — kept as one
+     shared selector so all three panes' headers can never drift out of
+     sync with each other again. */
+  .guide-pane-head,
+  .dice-pane-head,
+  .sheet-head {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 10px;
-    padding: 18px 20px;
+    padding: 16px 20px;
     border-bottom: 1px solid var(--edge);
     flex: 0 0 auto;
   }
-  .guide-pane-head h2 { margin: 0; font-size: 1.1rem; color: var(--gold); letter-spacing: 1px; }
-  /* Only meaningful once the guide can actually be collapsed — that's a
-     width thing, and widths only apply once the guide sits beside the
-     roller as its own column (see the min-width:900px override below). */
-  .guide-collapse-btn { display: none; }
-  @media (min-width: 900px) {
-    .guide-collapse-btn {
-      display: block;
-      background: transparent;
-      border: 1px solid var(--edge);
-      color: var(--text-dim);
-      border-radius: 10px;
-      width: 34px;
-      height: 34px;
-      flex: 0 0 auto;
-      cursor: pointer;
-      font-size: 1.1rem;
-      line-height: 1;
-      transition: border-color .2s, color .2s, background .2s;
-    }
-    .guide-collapse-btn:hover { border-color: var(--gold); color: var(--gold-bright); background: var(--face); }
-  }
+  .guide-pane-head h2,
+  .dice-pane-head h2,
+  .sheet-head h2 { margin: 0; font-size: 1.1rem; color: var(--gold); letter-spacing: 1px; }
 
   /* ---------- Guide (Příručka) content ---------- */
   .guide-body {
@@ -889,18 +875,10 @@
     width: 100%;
     min-width: 0;
   }
-  /* Same icon+title head pattern as the Deník and guide panes, so the
-     roller reads as a consistent third "section" alongside them instead
-     of being the odd one out with no header of its own. */
-  .dice-pane-head {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 16px 20px;
-    border-bottom: 1px solid var(--edge);
-    flex: 0 0 auto;
-  }
-  .dice-pane-head h2 { margin: 0; font-size: 1.1rem; color: var(--gold); letter-spacing: 1px; }
+  /* Same icon+title head pattern as the Deník and guide panes (see the
+     shared .guide-pane-head/.dice-pane-head/.sheet-head rule above), so
+     the roller reads as a consistent third "section" alongside them
+     instead of being the odd one out with no header of its own. */
   /* Only meaningful once the roller and sheet sit side by side */
   .pane-resizer { display: none; }
 
@@ -914,30 +892,6 @@
     border-top: 1px solid var(--edge);
   }
 
-  .sheet-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    padding: 18px 20px;
-    border-bottom: 1px solid var(--edge);
-    flex: 0 0 auto;
-  }
-  .sheet-head h2 { margin: 0; font-size: 1.15rem; color: var(--gold); letter-spacing: 1px; }
-  .sheet-clear-btn {
-    background: transparent;
-    border: 1px solid var(--edge);
-    color: var(--text-dim);
-    border-radius: 10px;
-    padding: 8px 12px;
-    font-size: 0.78rem;
-    letter-spacing: 0.5px;
-    cursor: pointer;
-    white-space: nowrap;
-    flex: 0 0 auto;
-    transition: border-color .2s, color .2s, background .2s;
-  }
-  .sheet-clear-btn:hover { border-color: var(--crimson); color: var(--crimson-bright); background: rgba(160,44,58,0.12); }
 
   /* Real column CONTAINERS (.sheet-col, built in JS — see
      computeSheetColCount/distributeIntoColumns), not CSS column-count.
@@ -1390,8 +1344,8 @@
 
     .controls { margin: 10px auto 16px; gap: 8px; }
     .qty-control, .mod-control { padding: 6px 10px; }
-    .dice-pane-head { padding: 10px 16px; }
-    .dice-pane-head h2 { font-size: 0.98rem; }
+    .guide-pane-head, .dice-pane-head, .sheet-head { padding: 10px 16px; }
+    .guide-pane-head h2, .dice-pane-head h2, .sheet-head h2 { font-size: 0.98rem; }
   }
 
   /* Column COUNT (1/2/3) is computed in JS from the pane's own rendered
@@ -1428,8 +1382,8 @@
     /* Save width: drop the button labels, keep icon + count */
     .topbar-actions button .btn-text { display: none; }
 
-    .dice-pane-head { padding: 8px 14px; flex: 0 0 auto; }
-    .dice-pane-head h2 { font-size: 0.95rem; }
+    .guide-pane-head, .dice-pane-head, .sheet-head { padding: 8px 14px; flex: 0 0 auto; }
+    .guide-pane-head h2, .dice-pane-head h2, .sheet-head h2 { font-size: 0.95rem; }
 
     /* Middle region: fills leftover space, never scrolls, centres its content */
     main {
@@ -1610,7 +1564,6 @@
   <aside class="guide-pane" id="guidePane" aria-hidden="true">
     <div class="guide-pane-head">
       <h2>📖 Příručka D&amp;D</h2>
-      <button class="guide-collapse-btn" id="collapseGuide" title="Sbalit příručku" aria-label="Sbalit příručku">«</button>
     </div>
     <div class="guide-body">
       <div class="guide-intro">
@@ -1824,7 +1777,6 @@
     <aside class="sheet-pane">
       <div class="sheet-head">
         <h2>📝 Deník postavy</h2>
-        <button class="sheet-clear-btn" id="sheetClearBtn" title="Smazat celý deník">🗑 Smazat</button>
       </div>
       <div class="sheet-body" id="sheetBody"></div>
     </aside>
@@ -1857,16 +1809,6 @@
     </div>
   </dialog>
 
-  <dialog id="sheetClearDialog">
-    <div class="dialog-body">
-      <h3>Smazat deník postavy?</h3>
-      <p>Tímto trvale odstraníš všechny uložené údaje o postavě. Tuto akci nelze vrátit zpět.</p>
-    </div>
-    <div class="dialog-actions">
-      <button class="btn-cancel" id="cancelSheetClear">Zrušit</button>
-      <button class="btn-danger" id="confirmSheetClear">Smazat vše</button>
-    </div>
-  </dialog>
 
 <script>
 (function () {
@@ -1910,7 +1852,6 @@
   const disBtn = document.getElementById("disBtn");
   const sheetBody = document.getElementById("sheetBody");
   const sheetPane = document.querySelector(".sheet-pane");
-  const sheetClearDialog = document.getElementById("sheetClearDialog");
   const dicePane = document.querySelector(".dice-pane");
   const appShell = document.querySelector(".app-shell");
   const paneResizer = document.getElementById("paneResizer");
@@ -2330,7 +2271,6 @@
     drawer.classList.contains("open") ? closeDrawer() : openDrawer();
   });
   document.getElementById("closeDrawer").addEventListener("click", closeDrawer);
-  document.getElementById("collapseGuide").addEventListener("click", () => closeGuidePane());
   overlay.addEventListener("click", closeDrawer);
 
   // ---------- Guide accordion ----------
@@ -3014,26 +2954,6 @@
       buzz(10);
       return;
     }
-  });
-
-  // ---------- Clear the character sheet + confirm dialog ----------
-  document.getElementById("sheetClearBtn").addEventListener("click", () => {
-    sheetClearDialog.showModal();
-  });
-  document.getElementById("cancelSheetClear").addEventListener("click", () => sheetClearDialog.close());
-  document.getElementById("confirmSheetClear").addEventListener("click", () => {
-    sheet = {};
-    saveSheetData();
-    renderSheetBody();
-    updateVitals();
-    sheetClearDialog.close();
-    buzz(15);
-  });
-  sheetClearDialog.addEventListener("click", (e) => {
-    const rect = sheetClearDialog.getBoundingClientRect();
-    const inside = e.clientX >= rect.left && e.clientX <= rect.right &&
-                   e.clientY >= rect.top && e.clientY <= rect.bottom;
-    if (!inside) sheetClearDialog.close();
   });
 
   // ---------- Drag to resize the roller vs. sheet columns ----------
