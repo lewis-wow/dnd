@@ -675,6 +675,11 @@
   .history-list {
     flex: 1;
     overflow-y: auto;
+    /* Reserve the scrollbar's gutter even when nothing overflows yet, so
+       deleting the item that was causing the overflow doesn't make the
+       scrollbar disappear mid-animation and shift every remaining row
+       sideways by its width. */
+    scrollbar-gutter: stable;
     padding: 12px 16px;
     display: flex;
     flex-direction: column;
@@ -704,8 +709,12 @@
     animation: slideOut 0.24s ease forwards;
     overflow: hidden;
   }
+  /* No horizontal movement here (unlike slideIn) — sliding the item
+     sideways as it left is what actually read as the list "shifting on
+     the x-axis" on delete. A pure vertical collapse + fade removes it
+     without anything visibly moving sideways. */
   @keyframes slideOut {
-    to { opacity: 0; transform: translateX(40px); max-height: 0; padding-top: 0; padding-bottom: 0; margin-top: -10px; }
+    to { opacity: 0; max-height: 0; padding-top: 0; padding-bottom: 0; margin-top: -10px; }
   }
 
   /* Die shape on the left of each history row */
@@ -1792,6 +1801,7 @@
   const advBtn = document.getElementById("advBtn");
   const disBtn = document.getElementById("disBtn");
   const sheetBody = document.getElementById("sheetBody");
+  const sheetPane = document.querySelector(".sheet-pane");
   const sheetClearDialog = document.getElementById("sheetClearDialog");
   const dicePane = document.querySelector(".dice-pane");
   const appShell = document.querySelector(".app-shell");
@@ -2607,6 +2617,25 @@
     try { localStorage.setItem(SHEET_KEY, JSON.stringify(sheet)); } catch (e) { /* storage unavailable — ignore */ }
   }
 
+  // ---------- Remember the Deník's own scroll position across reloads ----------
+  // Only meaningful once the sheet pane scrolls independently (>=900px —
+  // below that the whole page scrolls instead, which browsers already
+  // restore on their own).
+  const SHEET_SCROLL_KEY = "dnd_sheet_scroll_v1";
+  let sheetScrollSaveTimer = null;
+  function saveSheetScroll() {
+    clearTimeout(sheetScrollSaveTimer);
+    sheetScrollSaveTimer = setTimeout(() => {
+      try { localStorage.setItem(SHEET_SCROLL_KEY, String(sheetPane.scrollTop)); } catch (e) { /* ignore */ }
+    }, 150);
+  }
+  function restoreSheetScroll() {
+    let saved = 0;
+    try { saved = parseInt(localStorage.getItem(SHEET_SCROLL_KEY), 10) || 0; } catch (e) { /* ignore */ }
+    if (saved > 0) sheetPane.scrollTop = saved;
+  }
+  sheetPane.addEventListener("scroll", saveSheetScroll);
+
   // Debounce text/textarea saves so fast typing doesn't hammer localStorage;
   // checkbox toggles are rare, so those save immediately.
   let sheetSaveTimer = null;
@@ -2778,6 +2807,9 @@
   updateVitals();
   applyPaneWidthForViewport();
   setChromeHeight();
+  // Wait a frame so the sheet's full (container-query-driven) layout has
+  // actually settled before reading/restoring scroll position against it.
+  requestAnimationFrame(restoreSheetScroll);
 })();
 </script>
 </body>
