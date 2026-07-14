@@ -972,6 +972,11 @@
     color: var(--text);
   }
 
+  /* Free-text field revealed under a select when its "Jiné"/"Jiná" (Other)
+     option is picked — hidden for every other choice. */
+  .sheet-field-other { margin-top: 6px; }
+  .sheet-field-other.hidden { display: none; }
+
   /* Single checkbox fields (e.g. Inspirace) — same clickable-label pattern
      as the ability save/skill rows, but as a standalone field. */
   .sheet-check {
@@ -2447,11 +2452,11 @@
   const SHEET_SECTIONS = [
     { id: "basic", icon: "🪪", title: "Základní informace", fields: [
       { key: "charName", label: "Jméno postavy" },
-      { key: "class", label: "Povolání", type: "select", options: CLASSES, placeholder: "Vyber povolání…" },
+      { key: "class", label: "Povolání", type: "select", options: CLASSES, placeholder: "Vyber povolání…", otherValue: "Jiné" },
       { key: "level", label: "Úroveň", type: "select", options: CHAR_LEVELS, placeholder: "—" },
-      { key: "background", label: "Zázemí", type: "select", options: BACKGROUNDS, placeholder: "Vyber zázemí…" },
+      { key: "background", label: "Zázemí", type: "select", options: BACKGROUNDS, placeholder: "Vyber zázemí…", otherValue: "Jiné" },
       { key: "playerName", label: "Jméno hráče" },
-      { key: "race", label: "Rasa", type: "select", options: RACES, placeholder: "Vyber rasu…" },
+      { key: "race", label: "Rasa", type: "select", options: RACES, placeholder: "Vyber rasu…", otherValue: "Jiná" },
       { key: "alignment", label: "Přesvědčení", type: "select", options: ALIGNMENTS, placeholder: "Vyber přesvědčení…" },
       { key: "xp", label: "Body zkušenosti" },
       { key: "profBonus", label: "Zdatnostní bonus" },
@@ -2516,8 +2521,21 @@
       const cur = sheet[f.key] || "";
       const placeholderOpt = f.placeholder ? `<option value=""${cur === "" ? " selected" : ""}>${escHtml(f.placeholder)}</option>` : "";
       const opts = f.options.map((o) => `<option value="${escHtml(o)}"${o === cur ? " selected" : ""}>${escHtml(o)}</option>`).join("");
+      // Options like "Jiné"/"Jiná" (Other) are a dead end on their own —
+      // reveal a free-text field right under the select so the player can
+      // actually say what the "other" is, instead of just picking a value
+      // that means nothing on its own.
+      let otherHtml = "";
+      if (f.otherValue) {
+        const shown = cur === f.otherValue;
+        const otherKey = f.key + "_other";
+        otherHtml = `<input type="text" class="sheet-field-other${shown ? "" : " hidden"}" ` +
+          `data-key="${otherKey}" data-other-for="${f.key}" placeholder="Uveď vlastní…" ` +
+          `value="${escHtml(sheet[otherKey] || "")}">`;
+      }
+      const otherAttr = f.otherValue ? ` data-other-value="${escHtml(f.otherValue)}"` : "";
       return `<div class="sheet-field${wideCls}"><label>${f.label}</label>` +
-        `<select data-key="${f.key}">${placeholderOpt}${opts}</select></div>`;
+        `<select data-key="${f.key}"${otherAttr}>${placeholderOpt}${opts}</select>${otherHtml}</div>`;
     }
     if (f.type === "checkbox") {
       const checked = !!sheet[f.key];
@@ -2705,7 +2723,18 @@
     const t = e.target;
     if (!t.dataset.key) return;
     if (t.type === "checkbox") { sheet[t.dataset.key] = t.checked; saveSheetData(); updateVitals(); return; }
-    if (t.tagName === "SELECT") { sheet[t.dataset.key] = t.value; saveSheetData(); updateVitals(); return; }
+    if (t.tagName === "SELECT") {
+      sheet[t.dataset.key] = t.value;
+      saveSheetData();
+      updateVitals();
+      // Show the free-text field only while "Jiné"/"Jiná" is the selected
+      // option — hidden for every other value.
+      if (t.dataset.otherValue) {
+        const otherInput = t.parentElement.querySelector('.sheet-field-other[data-other-for="' + t.dataset.key + '"]');
+        if (otherInput) otherInput.classList.toggle("hidden", t.value !== t.dataset.otherValue);
+      }
+      return;
+    }
   });
 
   // ---------- Add / remove structured rows (attacks, spell names) ----------
