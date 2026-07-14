@@ -59,11 +59,19 @@
       var(--bg-0);
     background-attachment: fixed;
     color: var(--text);
-    overflow-x: hidden;
     overscroll-behavior-y: none;
     text-size-adjust: 100%;
     -webkit-text-size-adjust: 100%;
   }
+  /* overflow-x:hidden lives on html ONLY, not body: setting it on both
+     makes every browser auto-promote body's overflow-y to "auto" (the
+     CSS overflow-coupling rule — an axis left as the default "visible"
+     gets forced to "auto" once its sibling axis is non-visible), which
+     turns body into a second, nested scroll container. That silently
+     breaks position:sticky for anything inside it (like the dice pane
+     sticking beside the character sheet), since it ends up stuck to the
+     wrong scrolling box. */
+  html { overflow-x: hidden; }
 
   body {
     display: flex;
@@ -81,60 +89,124 @@
     -webkit-touch-callout: none;
   }
 
-  /* ---------- Header ---------- */
-  header {
-    text-align: center;
-    padding: 22px 22px 10px;
-    position: relative;
+  /* ---------- Top bar: brand + live vitals + actions ----------
+     Spans the FULL page width above both panes (not squeezed inside the
+     narrow roller column the way the old centred header was) — a single
+     layout that works at every breakpoint with no per-width restacking.
+     Sticky, so the vitals strip below stays on screen even once you've
+     scrolled deep into a long Deník. */
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 18px;
+    padding: 10px 20px;
+    background: linear-gradient(180deg, var(--bg-1), var(--bg-0) 160%);
+    border-bottom: 1px solid var(--edge);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.35);
   }
-  .header-titles { min-width: 0; }
-  header h1 {
+  .topbar-brand {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    flex: 0 0 auto;
+  }
+  .topbar-logo { font-size: 1.5rem; line-height: 1; }
+  .topbar-titles { min-width: 0; }
+  .topbar-titles h1 {
     margin: 0;
-    font-size: clamp(1.8rem, 5vw, 2.8rem);
-    letter-spacing: 3px;
+    font-size: 1.15rem;
+    letter-spacing: 1.5px;
     font-weight: 700;
     background: linear-gradient(180deg, var(--gold-bright), var(--gold) 60%, #8a6d2c);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
-    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+    white-space: nowrap;
   }
-  header p {
-    margin: 4px 0 0;
+  .topbar-titles p {
+    margin: 1px 0 0;
     color: var(--text-dim);
-    font-size: 0.85rem;
-    letter-spacing: 4px;
+    font-size: 0.6rem;
+    letter-spacing: 2.5px;
     text-transform: uppercase;
+    white-space: nowrap;
   }
 
-  /* Guide button lives on the LEFT (it opens a left-docking drawer),
-     history stays on the RIGHT — this keeps the title centred between
-     them with no overlap, at any width, with no need to resize it. */
-  .header-actions-left, .header-actions-right {
-    position: absolute;
-    top: 22px;
+  /* Live vitals: read-only mirrors of the Deník's own basic/combat fields,
+     so the numbers you actually roll against are visible everywhere — even
+     while the roller has focus, even mid-scroll through the sheet. The
+     sheet stays the single source of truth; nothing here is editable. */
+  .vitals-strip {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    flex: 1 1 320px;
+    min-width: 0;
+  }
+  .vital-chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--bg-2);
+    border: 1px solid var(--edge);
+    border-radius: 10px;
+    padding: 6px 11px;
+    white-space: nowrap;
+  }
+  .vital-chip .vital-ico { font-size: 0.92rem; flex: 0 0 auto; }
+  .vital-chip .vital-label { color: var(--text-dim); font-size: 0.64rem; letter-spacing: 0.5px; text-transform: uppercase; }
+  .vital-chip .vital-val { color: var(--text); font-weight: 700; font-size: 0.85rem; }
+  .vital-chip.vital-name { border-color: var(--gold); background: rgba(217,180,90,0.08); }
+  .vital-chip.vital-name .vital-val { color: var(--gold-bright); max-width: 34vw; overflow: hidden; text-overflow: ellipsis; }
+  .vital-chip.vital-insp { color: var(--text-dim); opacity: 0.45; transition: opacity .2s, border-color .2s, box-shadow .2s; }
+  .vital-chip.vital-insp.on { opacity: 1; border-color: var(--gold); box-shadow: 0 0 12px rgba(217,180,90,0.3); }
+
+  /* Ability-modifier group: flex-basis 100% forces a line break before it,
+     so all six stay together as one row instead of splitting mid-group
+     wherever the outer strip's own wrapping happens to land. */
+  .vitals-abilities {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    flex: 1 1 100%;
+  }
+
+  /* Ability modifiers: compact — abbreviation doubles as the .vital-ico
+     slot (so it survives the phone rule that hides .vital-label) rather
+     than pairing an icon with a label, since the abbreviation already IS
+     the label. */
+  .vital-chip.vital-abil { padding: 6px 9px; gap: 5px; }
+  .vital-chip.vital-abil .vital-ico { font-size: 0.62rem; font-weight: 700; letter-spacing: 0.5px; color: var(--text-dim); }
+  .vital-chip.vital-abil .vital-val { color: var(--gold-bright); }
+
+  .topbar-actions {
     display: flex;
     gap: 10px;
-    z-index: 2;
+    flex: 0 0 auto;
   }
-  .header-actions-left { left: 22px; }
-  .header-actions-right { right: 22px; }
-  .header-actions-left button, .header-actions-right button {
+  .topbar-actions button {
     background: var(--bg-2);
     border: 1px solid var(--edge);
     color: var(--gold);
-    padding: 10px 16px;
+    padding: 9px 14px;
     border-radius: 10px;
     cursor: pointer;
-    font-size: 0.85rem;
-    letter-spacing: 1px;
+    font-size: 0.82rem;
+    letter-spacing: 0.5px;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 7px;
     transition: background 0.2s, transform 0.1s, border-color 0.2s;
   }
-  .header-actions-left button:hover, .header-actions-right button:hover { background: var(--face-lit); border-color: var(--gold); }
-  .header-actions-left button:active, .header-actions-right button:active { transform: scale(0.95); }
+  .topbar-actions button:hover { background: var(--face-lit); border-color: var(--gold); }
+  .topbar-actions button:active { transform: scale(0.95); }
   .history-btn .count {
     background: var(--crimson);
     color: #fff;
@@ -152,7 +224,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 10px 16px 40px;
+    padding: 20px 16px 40px;
     width: 100%;
   }
 
@@ -169,7 +241,7 @@
   /* Shape of the last-rolled die, shown above the total.
      Height is ALWAYS reserved so a roll never shifts the layout below it. */
   .result-die {
-    height: 58px;
+    height: 96px;
     opacity: 0;
     overflow: visible;
     transform: scale(0.6);
@@ -183,7 +255,7 @@
     opacity: 1;
     transform: scale(1);
   }
-  .rd-inner { position: relative; width: 58px; height: 58px; }
+  .rd-inner { position: relative; width: 96px; height: 96px; }
   .rd-inner svg { width: 100%; height: 100%; overflow: visible; }
   .result-die .rd-shape { fill: url(#dieGrad); stroke: var(--gold); stroke-width: 2.5; }
   .rd-label {
@@ -193,7 +265,7 @@
     align-items: center;
     justify-content: center;
     font-weight: 800;
-    font-size: 0.92rem;
+    font-size: 1.28rem;
     letter-spacing: 0.5px;
     color: var(--gold-bright);
     text-shadow: 0 1px 2px rgba(0,0,0,0.7);
@@ -380,9 +452,13 @@
     align-items: center;
     justify-content: center;
   }
-  /* Inset "track" that visually groups the two segments as one control */
+  /* Inset "track" that visually groups the two segments as one control.
+     Stretched to fill its row (not just centred at its own content width)
+     so the visible pill lines up edge-to-edge with the qty/modifier boxes
+     above it instead of floating narrower in the middle. */
   .adv-toggle {
     display: inline-flex;
+    flex: 1 1 auto;
     gap: 4px;
     padding: 4px;
     background: var(--bg-0);
@@ -391,7 +467,8 @@
     box-shadow: inset 0 1px 3px rgba(0,0,0,0.45);
   }
   .adv-btn {
-    flex: 0 0 auto;
+    flex: 1 1 0;
+    min-width: 0;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -736,41 +813,41 @@
   .btn-danger { background: var(--crimson); color: #fff; border-color: var(--crimson); }
   .btn-danger:hover { background: var(--crimson-bright); }
 
-  /* ---------- Character sheet (Deník postavy) ---------- */
-  .sheet-scrim {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.65);
-    backdrop-filter: blur(2px);
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.25s;
-    z-index: 70;
-  }
-  .sheet-scrim.open { opacity: 1; pointer-events: auto; }
-
-  .sheet-panel {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    width: min(920px, 94vw);
-    max-height: 88vh;
-    transform: translate(-50%, -48%) scale(0.97);
-    background: linear-gradient(180deg, var(--bg-1), var(--bg-0));
-    border: 1px solid var(--edge);
-    border-radius: 18px;
-    box-shadow: 0 24px 70px rgba(0,0,0,0.6);
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.25s ease, transform 0.3s cubic-bezier(.4,0,.2,1);
-    z-index: 71;
+  /* ---------- App shell: dice roller + always-visible character sheet ---------- */
+  /* The sheet lives permanently on screen next to the roller — no button to
+     click, nothing to open. On narrow screens there isn't room side by
+     side, so it drops below the roller in normal document flow instead;
+     either way it's just there, never gated behind an interaction. */
+  .app-shell {
     display: flex;
     flex-direction: column;
+    width: 100%;
+    flex: 1 1 auto;
+    min-height: 0;
   }
-  .sheet-panel.open {
-    opacity: 1;
-    pointer-events: auto;
-    transform: translate(-50%, -50%) scale(1);
+  .dice-pane {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    min-width: 0;
+  }
+  /* Only meaningful once the roller and sheet sit side by side */
+  .pane-resizer { display: none; }
+
+  /* ---------- Character sheet (Deník postavy) ---------- */
+  .sheet-pane {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    min-width: 0;
+    background: linear-gradient(180deg, var(--bg-1), var(--bg-0));
+    border-top: 1px solid var(--edge);
+    /* The section-column count below responds to the PANE's own rendered
+       width, not the viewport — the pane can be dragged narrower than the
+       window via the resizer, and columns should collapse right along
+       with it rather than staying stuck at whatever the viewport allows. */
+    container-type: inline-size;
+    container-name: sheetpane;
   }
 
   .sheet-head {
@@ -783,7 +860,6 @@
     flex: 0 0 auto;
   }
   .sheet-head h2 { margin: 0; font-size: 1.15rem; color: var(--gold); letter-spacing: 1px; }
-  .sheet-head-actions { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; }
   .sheet-clear-btn {
     background: transparent;
     border: 1px solid var(--edge);
@@ -794,20 +870,36 @@
     letter-spacing: 0.5px;
     cursor: pointer;
     white-space: nowrap;
+    flex: 0 0 auto;
     transition: border-color .2s, color .2s, background .2s;
   }
   .sheet-clear-btn:hover { border-color: var(--crimson); color: var(--crimson-bright); background: rgba(160,44,58,0.12); }
 
   .sheet-body {
     flex: 1 1 auto;
-    overflow-y: auto;
-    padding: 16px 20px 26px;
+    padding: 16px 20px 32px;
     display: flex;
     flex-direction: column;
     gap: 10px;
   }
-  .sheet-body::-webkit-scrollbar { width: 8px; }
-  .sheet-body::-webkit-scrollbar-thumb { background: var(--edge); border-radius: 4px; }
+
+  /* Sections are always fully expanded — everything is on screen without
+     clicking anything. Reuses the guide's card look but is intentionally
+     NOT built from the clickable .acc-item/.acc-head — there is no toggle. */
+  .sheet-section {
+    border: 1px solid var(--edge);
+    border-radius: 12px;
+    background: var(--bg-2);
+  }
+  .sheet-section-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 14px 4px;
+  }
+  .sheet-section-head .acc-ico { font-size: 1.1rem; flex: 0 0 auto; }
+  .sheet-section-head .acc-title { flex: 1 1 auto; color: var(--gold); font-weight: 700; letter-spacing: 0.5px; font-size: 0.95rem; }
+  .sheet-section-body { padding: 6px 14px 14px; }
 
   /* Generic label+input field grid used inside most sections */
   .sheet-grid {
@@ -824,7 +916,7 @@
     letter-spacing: 0.6px;
     text-transform: uppercase;
   }
-  .sheet-field input[type="text"], .sheet-field textarea {
+  .sheet-field input[type="text"], .sheet-field textarea, .sheet-field select {
     background: var(--face);
     border: 1px solid var(--edge);
     color: var(--text);
@@ -835,11 +927,42 @@
     width: 100%;
   }
   .sheet-field textarea { resize: vertical; min-height: 76px; line-height: 1.5; }
-  .sheet-field input:focus, .sheet-field textarea:focus {
+  .sheet-field input:focus, .sheet-field textarea:focus, .sheet-field select:focus {
     outline: none;
     border-color: var(--gold);
     box-shadow: 0 0 0 2px rgba(217,180,90,0.2);
   }
+
+  /* Native <select> styled to match the rest of the dark form controls,
+     with a custom gold chevron instead of the browser's own default. */
+  .sheet-field select {
+    appearance: none;
+    -webkit-appearance: none;
+    cursor: pointer;
+    padding-right: 30px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23d9b45a' stroke-width='1.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 11px center;
+  }
+  .sheet-field select option {
+    background: var(--face);
+    color: var(--text);
+  }
+
+  /* Single checkbox fields (e.g. Inspirace) — same clickable-label pattern
+     as the ability save/skill rows, but as a standalone field. */
+  .sheet-check {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    background: var(--face);
+    border: 1px solid var(--edge);
+    border-radius: 8px;
+    padding: 9px 10px;
+    cursor: pointer;
+  }
+  .sheet-check input[type="checkbox"] { accent-color: var(--gold); width: 16px; height: 16px; flex: 0 0 auto; cursor: pointer; }
+  .sheet-check span { font-size: 0.88rem; color: var(--text); }
 
   /* Ability score cards (with nested saves + skills) */
   .ab-grid {
@@ -948,22 +1071,80 @@
   }
   .spell-lvl textarea:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 2px rgba(217,180,90,0.2); }
 
-  /* Sheet is a focused full-screen task — collapse to edge-to-edge on phones.
-     Uses --app-height (JS-measured), not height:100% — a fixed element sized
-     with 100% can measure against the taller layout viewport on mobile
-     Safari (the one that includes the address-bar's space), which tricks
-     the browser into letting the whole page scroll to "reveal" it. */
-  @media (max-width: 640px) {
-    .sheet-panel {
-      width: 100%; max-width: 100%;
-      height: var(--app-height, 100dvh); max-height: var(--app-height, 100dvh);
-      top: 0; left: 0; transform: translateY(8px);
-      border-radius: 0; border: none;
-    }
-    .sheet-panel.open { transform: translateY(0); }
-    .sheet-head { padding: 14px 16px calc(14px + env(safe-area-inset-top)) 16px; }
-    .sheet-body { padding: 14px 16px calc(14px + env(safe-area-inset-bottom)); }
+  /* Structured attacks table */
+  .atk-table { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+  .atk-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1.4fr auto;
+    gap: 8px;
+    align-items: center;
   }
+  .atk-row-head {
+    padding: 0 2px;
+    color: var(--text-dim);
+    font-size: 0.66rem;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+  }
+  .atk-row input[type="text"] {
+    background: var(--face);
+    border: 1px solid var(--edge);
+    color: var(--text);
+    border-radius: 8px;
+    padding: 8px 9px;
+    font-size: 0.88rem;
+    font-family: inherit;
+    width: 100%;
+  }
+  .atk-row input[type="text"]:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 2px rgba(217,180,90,0.2); }
+
+  /* Structured spell-name lists (one row per known spell) */
+  .spell-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+  .spell-row { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; }
+  .spell-row input[type="text"] {
+    background: var(--face);
+    border: 1px solid var(--edge);
+    color: var(--text);
+    border-radius: 8px;
+    padding: 8px 9px;
+    font-size: 0.88rem;
+    font-family: inherit;
+    width: 100%;
+  }
+  .spell-row input[type="text"]:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 2px rgba(217,180,90,0.2); }
+
+  /* Shared add/remove-row buttons */
+  .row-add-btn {
+    background: transparent;
+    border: 1px dashed var(--edge);
+    color: var(--text-dim);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 0.82rem;
+    letter-spacing: 0.3px;
+    cursor: pointer;
+    width: 100%;
+    transition: border-color .15s, color .15s, background .15s;
+  }
+  .row-add-btn:hover { border-color: var(--gold); color: var(--gold-bright); background: rgba(217,180,90,0.08); }
+  .row-del-btn {
+    flex: 0 0 auto;
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    border: 1px solid var(--edge);
+    background: var(--face);
+    color: var(--text-dim);
+    font-size: 1.1rem;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    transition: background .15s, color .15s, border-color .15s;
+  }
+  .row-del-btn:hover { background: rgba(160,44,58,0.2); color: var(--crimson-bright); border-color: var(--crimson); }
 
   /* ============ LAPTOP / DESKTOP — natural scrolling, tidy layout ============ */
   @media (min-width: 641px) {
@@ -973,7 +1154,7 @@
     main {
       flex: 0 0 auto;
       justify-content: flex-start;
-      padding: 6px 16px 8px;
+      padding: 16px 16px 8px;
     }
 
     /* Trim the reserved result area so there isn't a huge gap up top */
@@ -989,62 +1170,153 @@
     }
     .die { flex: 0 0 140px; }
 
-    /* Controls sit right below the tray, always on screen. The advantage
-       toggle takes its own centred row so its labels always have room. */
+    /* Controls sit right below the tray, always on screen. All three rows
+       (qty, modifier, advantage) share the same full-width treatment so
+       they line up consistently — left to their natural content width,
+       "Počet kostek" (breakable into two words) would shrink narrower
+       than the single-word "Modifikátor", leaving mismatched widths. */
     .controls { margin: 18px auto 32px; }
+    .qty-control { flex: 1 1 100%; justify-content: space-between; }
+    .qty-control label { flex: 0 0 auto; white-space: nowrap; }
     .adv-control { flex: 1 1 100%; justify-content: center; }
-
-    /* Drawers DOCK beside the play area instead of covering it, so history
-       or the guide can stay open while you keep rolling. No dimming overlay
-       here — the dice tray stays fully interactive. */
-    .overlay { display: none; }
-    body {
-      transition: padding-left .3s cubic-bezier(.4,0,.2,1),
-                  padding-right .3s cubic-bezier(.4,0,.2,1);
-    }
-    body.dock-left  { padding-left: var(--drawer-w); }
-    body.dock-right { padding-right: var(--drawer-w); }
-
-    /* A docked drawer narrows the header strip. The guide button sits on the
-       left (next to the drawer it opens) and history on the right, so the
-       title stays centred between them at its normal size, never resized —
-       only compact the button labels to icons if room gets tight. */
-    body.dock-left  .header-actions-left .btn-text,
-    body.dock-right .header-actions-right .btn-text { display: none; }
   }
 
-  /* ============ PHONE OPTIMIZATION — single-screen, no-scroll ============ */
+  /* ============ WIDE DESKTOP — sheet sits beside the roller ============ */
+  /* The character sheet is the important, information-dense part — the
+     roller stays compact instead of eating most of the screen. */
+  @media (min-width: 900px) {
+    /* Fixed-height row, filling exactly the space below the sticky top bar
+       (--chrome-h is the bar's own live-measured height — same variable
+       the phone layout uses). Each pane scrolls independently inside it:
+       the Deník gets its own scrollbar instead of carrying the roller down
+       the page with it, while the roller stays fully in view. This is NOT
+       the position:sticky + overflow-y:auto combination that caused real
+       rendering glitches earlier in the project — neither pane is sticky,
+       they're just two ordinary flex columns each with their own scroll,
+       a completely standard and safe pattern. */
+    .app-shell {
+      flex-direction: row;
+      height: calc(var(--app-height, 100dvh) - var(--chrome-h, 62px));
+      overflow: hidden;
+    }
+    .dice-pane {
+      /* Fixed width, no shrink — otherwise it loses a flex-shrink "fight"
+         against the sheet's own content-driven width and ends up narrower
+         than its own header/controls need, breaking their layout. */
+      flex: 0 0 440px;
+      width: 440px;
+      min-width: 0;
+      height: 100%;
+      overflow-y: auto;
+    }
+    .sheet-pane {
+      flex: 1 1 auto;
+      min-width: 0;
+      height: 100%;
+      overflow-y: auto;
+      border-top: none;
+      /* No border here — the drag handle's own centre line is the divider. */
+    }
+
+    /* Drag handle between the two panes: grab and drag to resize the roller
+       column, the sheet takes up whatever's left (and vice versa). */
+    .pane-resizer {
+      display: block;
+      flex: 0 0 14px;
+      width: 14px;
+      align-self: stretch;
+      position: relative;
+      cursor: col-resize;
+      touch-action: none;
+    }
+    .pane-resizer::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 50%;
+      width: 1px;
+      transform: translateX(-50%);
+      background: var(--edge);
+      transition: background .15s, width .15s;
+    }
+    .pane-resizer:hover::after,
+    .pane-resizer:focus-visible::after,
+    .pane-resizer.dragging::after {
+      width: 3px;
+      background: var(--gold);
+    }
+    .pane-resizer:focus-visible { outline: none; }
+
+    /* Shrink the die tray to fit the now-narrower roller column — same
+       3-per-row rhythm the phone layout already uses. */
+    .tray { max-width: 380px; gap: 8px; }
+    .die { flex: 0 0 118px; padding: 8px 4px 6px; gap: 4px; }
+    .die-shape { width: 48px; height: 48px; }
+    .die-shape .die-value { font-size: 1.05rem; }
+
+    .result-stage { min-height: 118px; margin: 0 0 6px; gap: 2px; }
+    .result-total { font-size: clamp(2rem, 8vw, 3.2rem); }
+    .result-die { height: 68px; }
+    .rd-inner { width: 68px; height: 68px; }
+
+    main { padding: 10px 16px 4px; }
+
+    .controls { margin: 10px auto 16px; gap: 8px; }
+    .qty-control, .mod-control { padding: 6px 10px; }
+  }
+
+  /* Sections read as two parallel columns once the PANE ITSELF has room —
+     basic info and every stat visible with far less scrolling. Tied to the
+     pane's own width (a container query) rather than the viewport, so
+     dragging the resizer narrower correctly collapses this back to one
+     column instead of staying stuck at two and looking cramped. */
+  @container sheetpane (min-width: 660px) {
+    .sheet-body {
+      display: block;
+      column-count: 2;
+      column-gap: 18px;
+    }
+    .sheet-section {
+      break-inside: avoid;
+      -webkit-column-break-inside: avoid;
+      margin-bottom: 18px;
+    }
+  }
+  /* Dragging the roller down to its minimum frees up enough room for a
+     third column. */
+  @container sheetpane (min-width: 1020px) {
+    .sheet-body { column-count: 3; }
+  }
+
+  /* ============ PHONE OPTIMIZATION ============ */
   @media (max-width: 640px) {
-    /* Lock the page to the viewport; the layout fits without scrolling.
+    /* The roller fills exactly one screen (as it always has), but the page
+       itself now scrolls — the always-visible sheet continues right below
+       it, reached by scrolling down rather than clicking anything.
        --app-height is measured in JS (window.innerHeight/visualViewport),
        since 100dvh doesn't always track the real visible area once the
-       mobile browser's own UI (address bar, etc.) resizes things. */
-    html, body { height: var(--app-height, 100dvh); overflow: hidden; }
+       mobile browser's own UI (address bar, etc.) resizes things.
+       --chrome-h is the topbar's own live-measured height (it now sits
+       above the roller instead of inside it), subtracted so the roller
+       still fits exactly one screen instead of overshooting by however
+       tall the sticky bar is. */
+    .dice-pane { min-height: calc(var(--app-height, 100dvh) - var(--chrome-h, 64px)); }
+    .sheet-pane { padding-bottom: env(safe-area-inset-bottom); }
 
-    header {
-      flex: 0 0 auto;
-      padding: 12px 14px 6px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    /* Phones only have room for the title + one action row; the guide
-       button collapses back next to history on the right here. */
-    .header-actions-left { position: static; order: 3; }
-    .header-actions-right { position: static; order: 3; }
-    .header-titles { flex: 1 1 auto; min-width: 0; text-align: left; order: 1; }
-    header h1 { font-size: 1.4rem; letter-spacing: 1.5px; }
-    header p { font-size: 0.66rem; letter-spacing: 2.5px; }
-
-    /* Action buttons: compact, tappable */
-    .header-actions-left button, .header-actions-right button {
-      padding: 9px 11px;
-      min-height: 42px;
-      font-size: 0.8rem;
-      gap: 6px;
-    }
-    /* Save width: drop the history label, keep the icon + count */
-    .history-btn .btn-text { display: none; }
+    /* Phones: title only (subtitle dropped), vitals wrap to their own
+       full-width row beneath, action buttons collapse to icons. */
+    .topbar { padding: 8px 12px; gap: 6px 10px; }
+    .topbar-titles p { display: none; }
+    .topbar-titles h1 { font-size: 1rem; letter-spacing: 1px; }
+    .vitals-strip { order: 3; flex: 1 1 100%; justify-content: flex-start; gap: 6px; }
+    .vital-chip { padding: 5px 8px; }
+    .vital-chip .vital-label { display: none; }
+    .vital-chip.vital-name .vital-val { max-width: 40vw; }
+    .vitals-abilities { justify-content: flex-start; gap: 6px; }
+    .topbar-actions button { padding: 8px 10px; min-height: 40px; }
+    /* Save width: drop the button labels, keep icon + count */
+    .topbar-actions button .btn-text { display: none; }
 
     /* Middle region: fills leftover space, never scrolls, centres its content */
     main {
@@ -1061,8 +1333,8 @@
     .result-stage { flex: 0 0 auto; min-height: 0; gap: 3px; margin: 0 0 4px; }
     .result-total { font-size: clamp(2.2rem, 14vw, 3.6rem); }
     .result-label { font-size: 0.8rem; }
-    .result-die { height: 42px; }
-    .rd-inner { width: 42px; height: 42px; }
+    .result-die { height: 62px; }
+    .rd-inner { width: 62px; height: 62px; }
 
     /* 3 dice per row; the grid takes remaining space and the rows share it */
     .tray {
@@ -1095,10 +1367,10 @@
     /* Modifier spans full width like the dice-count row */
     .mod-control { flex: 1 1 100%; }
     .num-input { min-height: 38px; font-size: 1.05rem; }
-    /* Advantage toggle spans full width; buttons split it evenly */
+    /* Advantage toggle spans full width; buttons split it evenly (the
+       flex:1 1 auto/1 1 0 stretch itself is already universal, in base) */
     .adv-control { flex: 1 1 100%; }
-    .adv-toggle { flex: 1 1 auto; }
-    .adv-btn { flex: 1 1 0; min-width: 0; min-height: 44px; padding: 10px 8px; font-size: 0.92rem; }
+    .adv-btn { min-height: 44px; padding: 10px 8px; font-size: 0.92rem; }
 
     /* Drawer near full-width */
     .drawer { width: 100%; max-width: 100%; border-left: none; }
@@ -1119,8 +1391,8 @@
 
   /* Short viewports (small phones / landscape): reclaim vertical space */
   @media (max-width: 640px) and (max-height: 700px) {
-    .result-die { height: 34px; }
-    .rd-inner { width: 34px; height: 34px; }
+    .result-die { height: 50px; }
+    .rd-inner { width: 50px; height: 50px; }
     .result-total { font-size: clamp(1.9rem, 11vw, 2.8rem); }
     .die-shape { width: clamp(32px, 10vw, 44px); height: clamp(32px, 10vw, 44px); }
     .die { padding: 6px 4px 5px; }
@@ -1145,59 +1417,132 @@
     </defs>
   </svg>
 
-  <header>
-    <div class="header-actions-left">
-      <button class="sheet-btn" id="openSheet" aria-label="Otevřít deník postavy">
-        📝 <span class="btn-text">Deník</span>
-      </button>
+  <!-- Top bar: brand + live vitals (mirrored from the Deník) + actions.
+       Spans the full page, sticky, above both panes — the vitals stay on
+       screen no matter which pane has focus or how far you've scrolled. -->
+  <header class="topbar">
+    <div class="topbar-brand">
+      <span class="topbar-logo" aria-hidden="true">🎲</span>
+      <div class="topbar-titles">
+        <h1>Kostky Říše</h1>
+        <p>Dungeons &amp; Dragons</p>
+      </div>
+    </div>
+
+    <div class="vitals-strip" aria-label="Klíčové hodnoty postavy">
+      <div class="vital-chip vital-name">
+        <span class="vital-ico">🪪</span>
+        <span class="vital-val" id="vitalName">Nová postava</span>
+      </div>
+      <div class="vital-chip">
+        <span class="vital-ico">🛡️</span>
+        <span class="vital-label">OČ</span>
+        <span class="vital-val" id="vitalAc">—</span>
+      </div>
+      <div class="vital-chip">
+        <span class="vital-ico">⚡</span>
+        <span class="vital-label">Ini</span>
+        <span class="vital-val" id="vitalIni">—</span>
+      </div>
+      <div class="vital-chip">
+        <span class="vital-ico">🏃</span>
+        <span class="vital-label">Rychlost</span>
+        <span class="vital-val" id="vitalSpeed">—</span>
+      </div>
+      <div class="vital-chip">
+        <span class="vital-ico">❤️</span>
+        <span class="vital-label">Životy</span>
+        <span class="vital-val" id="vitalHp">—</span>
+      </div>
+      <div class="vital-chip vital-insp" id="vitalInsp">
+        <span class="vital-ico">⭐</span>
+        <span class="vital-label">Inspirace</span>
+      </div>
+      <div class="vital-chip">
+        <span class="vital-ico">🎯</span>
+        <span class="vital-label">Zdat. bonus</span>
+        <span class="vital-val" id="vitalProf">—</span>
+      </div>
+
+      <!-- Ability modifiers: the numbers actually added to most d20 rolls,
+           computed on the fly from the sheet's raw scores (never stored —
+           the sheet stays the single source of truth, this is read-only).
+           Grouped in their own always-full-width row (flex-basis:100% forces
+           a line break before it) so the six stay together as one visual
+           unit instead of splitting mid-group wherever the outer strip
+           happens to wrap. -->
+      <div class="vitals-abilities">
+        <div class="vital-chip vital-abil"><span class="vital-ico">SÍL</span><span class="vital-val" id="vitalAbilStr">—</span></div>
+        <div class="vital-chip vital-abil"><span class="vital-ico">OBR</span><span class="vital-val" id="vitalAbilDex">—</span></div>
+        <div class="vital-chip vital-abil"><span class="vital-ico">ODO</span><span class="vital-val" id="vitalAbilCon">—</span></div>
+        <div class="vital-chip vital-abil"><span class="vital-ico">INT</span><span class="vital-val" id="vitalAbilInt">—</span></div>
+        <div class="vital-chip vital-abil"><span class="vital-ico">MDR</span><span class="vital-val" id="vitalAbilWis">—</span></div>
+        <div class="vital-chip vital-abil"><span class="vital-ico">CHA</span><span class="vital-val" id="vitalAbilCha">—</span></div>
+      </div>
+    </div>
+
+    <div class="topbar-actions">
       <button class="guide-btn" id="openGuide" aria-label="Otevřít příručku">
         📖 <span class="btn-text">Příručka</span>
       </button>
-    </div>
-    <div class="header-titles">
-      <h1>Kostky Říše</h1>
-      <p>Dungeons &amp; Dragons</p>
-    </div>
-    <div class="header-actions-right">
       <button class="history-btn" id="openDrawer" aria-label="Otevřít historii">
         📜 <span class="btn-text">Historie</span> <span class="count" id="histCount">0</span>
       </button>
     </div>
   </header>
 
-  <main>
-    <div class="result-stage">
-      <div class="result-die" id="resultDie" aria-hidden="true"></div>
-      <div class="result-total" id="resultTotal">—</div>
-      <div class="result-label" id="resultLabel">Vyber si kostku a nech rozhodnout osud</div>
-    </div>
+  <!-- The character sheet is always on screen next to the roller — no click
+       needed to see it, and nothing in it collapses. On narrow screens it
+       simply sits below the roller in normal scrolling flow instead of
+       beside it. -->
+  <div class="app-shell">
+    <div class="dice-pane">
+      <main>
+        <div class="result-stage">
+          <div class="result-die" id="resultDie" aria-hidden="true"></div>
+          <div class="result-total" id="resultTotal">—</div>
+          <div class="result-label" id="resultLabel">Vyber si kostku a nech rozhodnout osud</div>
+        </div>
 
-    <div class="tray" id="tray"></div>
-  </main>
+        <div class="tray" id="tray"></div>
+      </main>
 
-  <div class="controls">
-    <div class="qty-control">
-      <label>Počet kostek</label>
-      <button id="qtyMinus" aria-label="Ubrat kostku">−</button>
-      <input type="number" class="num-input" id="qtyVal" value="1" min="1" max="20" step="1" inputmode="numeric" />
-      <button id="qtyPlus" aria-label="Přidat kostku">+</button>
-    </div>
-    <div class="qty-control mod-control">
-      <label>Modifikátor</label>
-      <button id="modMinus" aria-label="Snížit modifikátor">−</button>
-      <input type="number" class="num-input" id="modifier" value="0" step="1" inputmode="numeric" />
-      <button id="modPlus" aria-label="Zvýšit modifikátor">+</button>
-    </div>
-    <div class="adv-control">
-      <div class="adv-toggle" role="group" aria-label="Výhoda nebo nevýhoda">
-        <button type="button" class="adv-btn adv" id="advBtn" aria-pressed="false" title="Hoď dvakrát, ber vyšší">
-          <span class="adv-ico" aria-hidden="true">▲</span> Výhoda
-        </button>
-        <button type="button" class="adv-btn dis" id="disBtn" aria-pressed="false" title="Hoď dvakrát, ber nižší">
-          <span class="adv-ico" aria-hidden="true">▼</span> Nevýhoda
-        </button>
+      <div class="controls">
+        <div class="qty-control">
+          <label>Počet kostek</label>
+          <button id="qtyMinus" aria-label="Ubrat kostku">−</button>
+          <input type="number" class="num-input" id="qtyVal" value="1" min="1" max="20" step="1" inputmode="numeric" />
+          <button id="qtyPlus" aria-label="Přidat kostku">+</button>
+        </div>
+        <div class="qty-control mod-control">
+          <label>Modifikátor</label>
+          <button id="modMinus" aria-label="Snížit modifikátor">−</button>
+          <input type="number" class="num-input" id="modifier" value="0" step="1" inputmode="numeric" />
+          <button id="modPlus" aria-label="Zvýšit modifikátor">+</button>
+        </div>
+        <div class="adv-control">
+          <div class="adv-toggle" role="group" aria-label="Výhoda nebo nevýhoda">
+            <button type="button" class="adv-btn adv" id="advBtn" aria-pressed="false" title="Hoď dvakrát, ber vyšší">
+              <span class="adv-ico" aria-hidden="true">▲</span> Výhoda
+            </button>
+            <button type="button" class="adv-btn dis" id="disBtn" aria-pressed="false" title="Hoď dvakrát, ber nižší">
+              <span class="adv-ico" aria-hidden="true">▼</span> Nevýhoda
+            </button>
+          </div>
+        </div>
       </div>
     </div>
+
+    <div class="pane-resizer" id="paneResizer" role="separator" aria-orientation="vertical"
+         aria-label="Změnit šířku panelu s kostkami" tabindex="0"></div>
+
+    <aside class="sheet-pane">
+      <div class="sheet-head">
+        <h2>📝 Deník postavy</h2>
+        <button class="sheet-clear-btn" id="sheetClearBtn" title="Smazat celý deník">🗑 Smazat</button>
+      </div>
+      <div class="sheet-body" id="sheetBody"></div>
+    </aside>
   </div>
 
   <!-- Drawer -->
@@ -1383,21 +1728,6 @@
     </div>
   </aside>
 
-  <!-- Deník postavy (character sheet) — a focused full-screen sheet, not a
-       docked drawer: it's an editing task, not something you keep open
-       while rolling, so it dims and covers the whole page like a dialog. -->
-  <div class="sheet-scrim" id="sheetScrim"></div>
-  <div class="sheet-panel" id="sheetPanel" aria-hidden="true" role="dialog" aria-label="Deník postavy">
-    <div class="sheet-head">
-      <h2>📝 Deník postavy</h2>
-      <div class="sheet-head-actions">
-        <button class="sheet-clear-btn" id="sheetClearBtn" title="Smazat celý deník">🗑 Smazat</button>
-        <button class="drawer-close" id="closeSheet" aria-label="Zavřít">×</button>
-      </div>
-    </div>
-    <div class="sheet-body" id="sheetBody"></div>
-  </div>
-
   <!-- Confirm dialogs -->
   <dialog id="confirmDialog">
     <div class="dialog-body">
@@ -1461,10 +1791,62 @@
   const confirmDialog = document.getElementById("confirmDialog");
   const advBtn = document.getElementById("advBtn");
   const disBtn = document.getElementById("disBtn");
-  const sheetScrim = document.getElementById("sheetScrim");
-  const sheetPanel = document.getElementById("sheetPanel");
   const sheetBody = document.getElementById("sheetBody");
   const sheetClearDialog = document.getElementById("sheetClearDialog");
+  const dicePane = document.querySelector(".dice-pane");
+  const appShell = document.querySelector(".app-shell");
+  const paneResizer = document.getElementById("paneResizer");
+  const topbar = document.querySelector(".topbar");
+  const vitalName = document.getElementById("vitalName");
+  const vitalAc = document.getElementById("vitalAc");
+  const vitalIni = document.getElementById("vitalIni");
+  const vitalSpeed = document.getElementById("vitalSpeed");
+  const vitalHp = document.getElementById("vitalHp");
+  const vitalInsp = document.getElementById("vitalInsp");
+  const vitalProf = document.getElementById("vitalProf");
+  const vitalAbil = {
+    str: document.getElementById("vitalAbilStr"),
+    dex: document.getElementById("vitalAbilDex"),
+    con: document.getElementById("vitalAbilCon"),
+    int: document.getElementById("vitalAbilInt"),
+    wis: document.getElementById("vitalAbilWis"),
+    cha: document.getElementById("vitalAbilCha")
+  };
+
+  // ---------- Live vitals bar (mirrors basic/combat sheet fields) ----------
+  // Ability modifiers aren't stored anywhere (the sheet only keeps the raw
+  // score you wrote down, by design — see the sheet section below), so this
+  // derives them purely for display: the number you actually add to most
+  // d20 rolls, without turning the bar into a second place that data lives.
+  function abilityMod(score) {
+    const n = parseInt(score, 10);
+    if (isNaN(n)) return "—";
+    const m = Math.floor((n - 10) / 2);
+    return (m >= 0 ? "+" : "−") + Math.abs(m);
+  }
+  function updateVitals() {
+    vitalName.textContent = sheet.charName ? sheet.charName : "Nová postava";
+    vitalAc.textContent = sheet.ac || "—";
+    vitalIni.textContent = sheet.initiative || "—";
+    vitalSpeed.textContent = sheet.speed || "—";
+    const cur = sheet.currentHp || "", max = sheet.maxHp || "";
+    vitalHp.textContent = (cur || max) ? (cur || "?") + " / " + (max || "?") : "—";
+    vitalInsp.classList.toggle("on", !!sheet.inspiration);
+    vitalProf.textContent = sheet.profBonus || "—";
+    Object.keys(vitalAbil).forEach((key) => {
+      vitalAbil[key].textContent = abilityMod(sheet[key + "_score"]);
+    });
+  }
+
+  // The topbar's own height can change (vitals wrapping to a second row on
+  // narrow screens), and the phone roller relies on it to size itself to
+  // exactly one screen — keep it live, same pattern as --app-height.
+  function setChromeHeight() {
+    const h = topbar ? topbar.getBoundingClientRect().height : 0;
+    document.documentElement.style.setProperty("--chrome-h", Math.round(h) + "px");
+  }
+  window.addEventListener("resize", setChromeHeight);
+  window.addEventListener("orientationchange", setChromeHeight);
 
   // ---------- Build dice tray ----------
   DICE.forEach((die) => {
@@ -1800,36 +2182,32 @@
   function openDrawer() {
     drawer.classList.add("open");
     drawer.setAttribute("aria-hidden", "false");
-    syncChrome();
+    syncOverlay();
   }
   function closeDrawer() {
     drawer.classList.remove("open");
     drawer.setAttribute("aria-hidden", "true");
-    syncChrome();
+    syncOverlay();
   }
   function openGuide() {
     guideDrawer.classList.add("open");
     guideDrawer.setAttribute("aria-hidden", "false");
-    syncChrome();
+    syncOverlay();
   }
   function closeGuide() {
     guideDrawer.classList.remove("open");
     guideDrawer.setAttribute("aria-hidden", "true");
-    syncChrome();
+    syncOverlay();
   }
-  // Keep the overlay (mobile) and the docked-layout classes (laptop) in sync.
-  // On laptops an open drawer docks beside the content instead of covering it,
-  // so you can keep history/guide open while rolling.
-  function syncChrome() {
-    const histOpen = drawer.classList.contains("open");
-    const guideOpen = guideDrawer.classList.contains("open");
-    overlay.classList.toggle("open", histOpen || guideOpen);
-    document.body.classList.toggle("dock-right", histOpen);
-    document.body.classList.toggle("dock-left", guideOpen);
+  // Both drawers always overlay the page (dimmed backdrop, on top of
+  // everything) rather than pushing the layout aside — the overlay stays
+  // visible as long as either one is open.
+  function syncOverlay() {
+    const anyOpen = drawer.classList.contains("open") || guideDrawer.classList.contains("open");
+    overlay.classList.toggle("open", anyOpen);
   }
   function closeAllDrawers() { closeDrawer(); closeGuide(); }
 
-  // Header buttons toggle their drawer (so they can also close it while docked)
   document.getElementById("openDrawer").addEventListener("click", () => {
     drawer.classList.contains("open") ? closeDrawer() : openDrawer();
   });
@@ -1859,14 +2237,26 @@
     const removeIt = () => {
       if (done) return;
       done = true;
+      // renderHistory() replaces the whole list's innerHTML, which resets
+      // its scroll position to the top — jarring if you'd scrolled down to
+      // delete an older roll. Capture and restore it across the re-render.
+      const scrollTop = historyList.scrollTop;
       history = history.filter((h) => h.id !== id);
       saveHistory();
       renderHistory();
+      historyList.scrollTop = scrollTop;
     };
 
     // Animate out, then remove
     if (item) {
       buzz(15);
+      // The slide-out keyframe animates max-height down to 0, but it starts
+      // unset (max-height: none) — browsers can't interpolate from "none",
+      // so the collapse just snaps in partway through instead of animating,
+      // yanking every item below it upward. Give it a concrete starting
+      // pixel value first so the whole collapse animates smoothly.
+      item.style.maxHeight = item.getBoundingClientRect().height + "px";
+      void item.offsetHeight; // force reflow so the browser registers it before animating
       item.classList.add("removing");
       item.addEventListener("animationend", removeIt, { once: true });
       // Fallback in case animationend doesn't fire
@@ -1898,10 +2288,9 @@
     if (!inside) confirmDialog.close();
   });
 
-  // Keyboard: Esc closes the sheet, or whichever drawer is open
+  // Keyboard: Esc closes whichever drawer is open
   document.addEventListener("keydown", (e) => {
     if (e.key !== "Escape") return;
-    if (sheetPanel.classList.contains("open")) { closeSheet(); return; }
     if (drawer.classList.contains("open") || guideDrawer.classList.contains("open")) {
       closeAllDrawers();
     }
@@ -1990,17 +2379,25 @@
     ]}
   ];
 
+  const RACES = ["Člověk", "Elf", "Trpaslík", "Půlčík (Hobit)", "Drakorozený", "Gnóm", "Půlelf", "Půlork", "Tiefling", "Jiná"];
+  const ALIGNMENTS = ["Zákonně dobré", "Neutrálně dobré", "Chaoticky dobré", "Zákonně neutrální", "Neutrální", "Chaoticky neutrální", "Zákonně zlé", "Neutrálně zlé", "Chaoticky zlé"];
+  const CLASSES = ["Alchymista", "Barbar", "Bard", "Klerik", "Druid", "Bojovník", "Mnich", "Paladin", "Hraničář", "Zloděj (Tulák)", "Čaroděj", "Černokněžník", "Kouzelník", "Jiné"];
+  const BACKGROUNDS = ["Voják", "Duchovní", "Zločinec", "Řemeslník", "Lidový hrdina", "Průvodce", "Poustevník", "Zábavný umělec", "Šlechtic", "Cizinec", "Mudrc", "Námořník", "Vyvrhel", "Jiné"];
+  const SPELL_ABILITIES = ["Inteligence", "Moudrost", "Charisma"];
+  const CHAR_LEVELS = Array.from({ length: 20 }, (_, i) => String(i + 1));
+
   const SHEET_SECTIONS = [
-    { id: "basic", icon: "🪪", title: "Základní informace", open: true, fields: [
+    { id: "basic", icon: "🪪", title: "Základní informace", fields: [
       { key: "charName", label: "Jméno postavy" },
-      { key: "classLevel", label: "Povolání a úroveň" },
-      { key: "background", label: "Zázemí" },
+      { key: "class", label: "Povolání", type: "select", options: CLASSES, placeholder: "Vyber povolání…" },
+      { key: "level", label: "Úroveň", type: "select", options: CHAR_LEVELS, placeholder: "—" },
+      { key: "background", label: "Zázemí", type: "select", options: BACKGROUNDS, placeholder: "Vyber zázemí…" },
       { key: "playerName", label: "Jméno hráče" },
-      { key: "race", label: "Rasa" },
-      { key: "alignment", label: "Přesvědčení" },
+      { key: "race", label: "Rasa", type: "select", options: RACES, placeholder: "Vyber rasu…" },
+      { key: "alignment", label: "Přesvědčení", type: "select", options: ALIGNMENTS, placeholder: "Vyber přesvědčení…" },
       { key: "xp", label: "Body zkušenosti" },
       { key: "profBonus", label: "Zdatnostní bonus" },
-      { key: "inspiration", label: "Inspirace" }
+      { key: "inspiration", label: "Inspirace", type: "checkbox" }
     ]},
     { id: "combat", icon: "⚔️", title: "Boj a životy", fields: [
       { key: "ac", label: "OČ (obranné číslo)" },
@@ -2014,10 +2411,7 @@
       { key: "deathFail", label: "Záchrany př. smrtí — neúspěchy" }
     ]},
     { id: "abilities", icon: "📊", title: "Vlastnosti, záchrany a dovednosti", abilities: true },
-    { id: "attacks", icon: "🗡️", title: "Útoky a kouzla", fields: [
-      { key: "attacks", label: "Útoky a kouzla", type: "textarea", rows: 7,
-        placeholder: "Např. Dlouhý meč — +5 — 1k8+3 sečné (jeden útok na řádek)" }
-    ]},
+    { id: "attacks", icon: "🗡️", title: "Útoky", attacksList: true },
     { id: "personality", icon: "🎭", title: "Osobnost postavy", fields: [
       { key: "traits", label: "Osobnostní rysy", type: "textarea" },
       { key: "ideals", label: "Ideály", type: "textarea" },
@@ -2060,8 +2454,29 @@
       return `<div class="sheet-field${wideCls}"><label>${f.label}</label>` +
         `<textarea data-key="${f.key}" rows="${f.rows || 3}"${ph}>${escHtml(sheet[f.key] || "")}</textarea></div>`;
     }
+    if (f.type === "select") {
+      const cur = sheet[f.key] || "";
+      const placeholderOpt = f.placeholder ? `<option value=""${cur === "" ? " selected" : ""}>${escHtml(f.placeholder)}</option>` : "";
+      const opts = f.options.map((o) => `<option value="${escHtml(o)}"${o === cur ? " selected" : ""}>${escHtml(o)}</option>`).join("");
+      return `<div class="sheet-field${wideCls}"><label>${f.label}</label>` +
+        `<select data-key="${f.key}">${placeholderOpt}${opts}</select></div>`;
+    }
+    if (f.type === "checkbox") {
+      const checked = !!sheet[f.key];
+      // Same label-above-control layout as every other field, so it isn't
+      // the odd one out in the grid.
+      return `<div class="sheet-field${wideCls}"><label>${f.label}</label>` +
+        `<label class="ab-check sheet-check"><input type="checkbox" data-key="${f.key}"${checked ? " checked" : ""}>` +
+        `<span>Ano</span></label></div>`;
+    }
     return `<div class="sheet-field${wideCls}"><label>${f.label}</label>` +
       `<input type="text" data-key="${f.key}" value="${escHtml(sheet[f.key] || "")}"${ph}></div>`;
+  }
+
+  let sheetIdCounter = 0;
+  function genId() {
+    sheetIdCounter += 1;
+    return Date.now().toString(36) + sheetIdCounter.toString(36);
   }
 
   function renderAbilityCard(a) {
@@ -2083,44 +2498,98 @@
       `</div>`;
   }
 
+  // ---------- Structured attacks table ----------
+  function ensureListSeed(idsKey) {
+    if (!Array.isArray(sheet[idsKey]) || !sheet[idsKey].length) sheet[idsKey] = [genId()];
+    return sheet[idsKey];
+  }
+
+  function renderAttacksBody() {
+    const ids = ensureListSeed("attackIds");
+    const rows = ids.map((id) => {
+      const nameV = escHtml(sheet["atk_" + id + "_name"] || "");
+      const bonusV = escHtml(sheet["atk_" + id + "_bonus"] || "");
+      const dmgV = escHtml(sheet["atk_" + id + "_dmg"] || "");
+      return `<div class="atk-row">` +
+        `<input type="text" data-key="atk_${id}_name" value="${nameV}" placeholder="Název">` +
+        `<input type="text" data-key="atk_${id}_bonus" value="${bonusV}" placeholder="Bonus">` +
+        `<input type="text" data-key="atk_${id}_dmg" value="${dmgV}" placeholder="Zranění / typ">` +
+        `<button type="button" class="row-del-btn atk-del-btn" data-atk-id="${id}" aria-label="Smazat útok">×</button>` +
+        `</div>`;
+    }).join("");
+    return `<div class="atk-table">` +
+      `<div class="atk-row atk-row-head"><span>Název</span><span>Útočný bonus</span><span>Zranění / typ</span><span></span></div>` +
+      rows +
+      `</div>` +
+      `<button type="button" class="row-add-btn" id="atkAddBtn">+ Přidat útok</button>`;
+  }
+
+  // ---------- Structured, repeatable spell-name lists ----------
+  function renderSpellNameList(level) {
+    const idsKey = "spellIds" + level;
+    const ids = ensureListSeed(idsKey);
+    const rows = ids.map((id) => {
+      const key = "spellname_" + level + "_" + id;
+      const v = escHtml(sheet[key] || "");
+      return `<div class="spell-row">` +
+        `<input type="text" data-key="${key}" value="${v}" placeholder="Název kouzla">` +
+        `<button type="button" class="row-del-btn spell-del-btn" data-spell-level="${level}" data-spell-id="${id}" aria-label="Smazat kouzlo">×</button>` +
+        `</div>`;
+    }).join("");
+    return `<div class="spell-list">${rows}</div>` +
+      `<button type="button" class="row-add-btn spell-add-btn" data-spell-level="${level}">+ Přidat kouzlo</button>`;
+  }
+
   function renderSpellSection() {
     let html = `<div class="sheet-grid">` +
-      renderField({ key: "spellAbility", label: "Sesílací vlastnost" }) +
+      renderField({ key: "spellAbility", label: "Sesílací vlastnost", type: "select", options: SPELL_ABILITIES, placeholder: "Vyber vlastnost…" }) +
       renderField({ key: "spellSaveDc", label: "SO záchrany kouzel" }) +
       renderField({ key: "spellAttackBonus", label: "Útočný bonus kouzla" }) +
       `</div>`;
     html += `<div class="spell-lvl">` +
       `<div class="spell-lvl-head"><span class="lvl-badge">0</span><span class="lvl-title">Triky</span></div>` +
-      `<textarea data-key="cantrips" placeholder="Triky, jeden na řádek…">${escHtml(sheet.cantrips || "")}</textarea>` +
+      renderSpellNameList(0) +
       `</div>`;
     for (let lvl = 1; lvl <= 9; lvl++) {
-      const totalKey = "spellSlotsTotal" + lvl, usedKey = "spellSlotsUsed" + lvl, listKey = "spells" + lvl;
+      const totalKey = "spellSlotsTotal" + lvl, usedKey = "spellSlotsUsed" + lvl;
       html += `<div class="spell-lvl">` +
         `<div class="spell-lvl-head">` +
         `<span class="lvl-badge">${lvl}</span><span class="lvl-title">Kouzla ${lvl}. úrovně</span>` +
         `<label>Pozic celkem</label><input type="text" data-key="${totalKey}" value="${escHtml(sheet[totalKey] || "")}">` +
         `<label>Utraceno</label><input type="text" data-key="${usedKey}" value="${escHtml(sheet[usedKey] || "")}">` +
         `</div>` +
-        `<textarea data-key="${listKey}" placeholder="Známá kouzla, jedno na řádek…">${escHtml(sheet[listKey] || "")}</textarea>` +
+        renderSpellNameList(lvl) +
         `</div>`;
     }
     return html;
   }
 
-  function renderSection(sec) {
-    let body;
+  function buildSectionBody(sec) {
     if (sec.abilities) {
-      body = `<div class="ab-grid">${ABILITIES.map(renderAbilityCard).join("")}</div>` +
+      return `<div class="ab-grid">${ABILITIES.map(renderAbilityCard).join("")}</div>` +
         `<div class="sheet-grid">${renderField({ key: "passiveWis", label: "Pasivní moudrost (vnímání)" })}</div>`;
-    } else if (sec.spellcasting) {
-      body = renderSpellSection();
-    } else {
-      body = `<div class="sheet-grid">${sec.fields.map(renderField).join("")}</div>`;
     }
-    return `<div class="acc-item${sec.open ? " open" : ""}">` +
-      `<button class="acc-head" type="button"><span class="acc-ico">${sec.icon}</span>` +
-      `<span class="acc-title">${sec.title}</span><span class="acc-chev">▶</span></button>` +
-      `<div class="acc-body">${body}</div></div>`;
+    if (sec.spellcasting) return renderSpellSection();
+    if (sec.attacksList) return renderAttacksBody();
+    return `<div class="sheet-grid">${sec.fields.map(renderField).join("")}</div>`;
+  }
+
+  // Re-renders just one section's body in place (used after adding/removing
+  // an attack or spell row), so the rest of the sheet — scroll position,
+  // whatever else you were mid-typing — is left completely undisturbed.
+  function rerenderSection(id) {
+    const sec = SHEET_SECTIONS.find((s) => s.id === id);
+    const el = document.getElementById("sheetSecBody_" + id);
+    if (!sec || !el) return;
+    el.innerHTML = buildSectionBody(sec);
+  }
+
+  function renderSection(sec) {
+    // Always fully expanded — this is a static section, not a toggle.
+    return `<div class="sheet-section">` +
+      `<div class="sheet-section-head"><span class="acc-ico">${sec.icon}</span>` +
+      `<span class="acc-title">${sec.title}</span></div>` +
+      `<div class="sheet-section-body" id="sheetSecBody_${sec.id}">${buildSectionBody(sec)}</div></div>`;
   }
 
   function renderSheetBody() {
@@ -2150,38 +2619,64 @@
   // working even if a field is re-rendered later (e.g. after clearing).
   sheetBody.addEventListener("input", (e) => {
     const t = e.target;
-    if (!t.dataset.key || t.type === "checkbox") return;
+    if (!t.dataset.key || t.type === "checkbox" || t.tagName === "SELECT") return;
     sheet[t.dataset.key] = t.value;
     scheduleSaveSheet();
+    updateVitals();
   });
   sheetBody.addEventListener("change", (e) => {
     const t = e.target;
-    if (!t.dataset.key || t.type !== "checkbox") return;
-    sheet[t.dataset.key] = t.checked;
-    saveSheetData();
-  });
-  sheetBody.addEventListener("click", (e) => {
-    const head = e.target.closest(".acc-head");
-    if (!head) return;
-    head.parentElement.classList.toggle("open");
-    buzz(6);
+    if (!t.dataset.key) return;
+    if (t.type === "checkbox") { sheet[t.dataset.key] = t.checked; saveSheetData(); updateVitals(); return; }
+    if (t.tagName === "SELECT") { sheet[t.dataset.key] = t.value; saveSheetData(); updateVitals(); return; }
   });
 
-  function openSheet() {
-    sheetScrim.classList.add("open");
-    sheetPanel.classList.add("open");
-    sheetPanel.setAttribute("aria-hidden", "false");
-  }
-  function closeSheet() {
-    sheetScrim.classList.remove("open");
-    sheetPanel.classList.remove("open");
-    sheetPanel.setAttribute("aria-hidden", "true");
-  }
-  document.getElementById("openSheet").addEventListener("click", () => {
-    sheetPanel.classList.contains("open") ? closeSheet() : openSheet();
+  // ---------- Add / remove structured rows (attacks, spell names) ----------
+  sheetBody.addEventListener("click", (e) => {
+    if (e.target.closest("#atkAddBtn")) {
+      sheet.attackIds = Array.isArray(sheet.attackIds) ? sheet.attackIds : [];
+      sheet.attackIds.push(genId());
+      saveSheetData();
+      rerenderSection("attacks");
+      buzz(6);
+      return;
+    }
+    const atkDel = e.target.closest(".atk-del-btn");
+    if (atkDel) {
+      const id = atkDel.dataset.atkId;
+      sheet.attackIds = (sheet.attackIds || []).filter((x) => x !== id);
+      delete sheet["atk_" + id + "_name"];
+      delete sheet["atk_" + id + "_bonus"];
+      delete sheet["atk_" + id + "_dmg"];
+      saveSheetData();
+      rerenderSection("attacks");
+      buzz(10);
+      return;
+    }
+    const spellAdd = e.target.closest(".spell-add-btn");
+    if (spellAdd) {
+      const level = spellAdd.dataset.spellLevel;
+      const idsKey = "spellIds" + level;
+      sheet[idsKey] = Array.isArray(sheet[idsKey]) ? sheet[idsKey] : [];
+      sheet[idsKey].push(genId());
+      saveSheetData();
+      rerenderSection("spells");
+      buzz(6);
+      return;
+    }
+    const spellDel = e.target.closest(".spell-del-btn");
+    if (spellDel) {
+      const level = spellDel.dataset.spellLevel;
+      const id = spellDel.dataset.spellId;
+      const idsKey = "spellIds" + level;
+      sheet[idsKey] = (sheet[idsKey] || []).filter((x) => x !== id);
+      delete sheet["spellname_" + level + "_" + id];
+      saveSheetData();
+      rerenderSection("spells");
+      buzz(10);
+      return;
+    }
   });
-  document.getElementById("closeSheet").addEventListener("click", closeSheet);
-  sheetScrim.addEventListener("click", closeSheet);
 
   // ---------- Clear the character sheet + confirm dialog ----------
   document.getElementById("sheetClearBtn").addEventListener("click", () => {
@@ -2192,6 +2687,7 @@
     sheet = {};
     saveSheetData();
     renderSheetBody();
+    updateVitals();
     sheetClearDialog.close();
     buzz(15);
   });
@@ -2202,12 +2698,86 @@
     if (!inside) sheetClearDialog.close();
   });
 
+  // ---------- Drag to resize the roller vs. sheet columns ----------
+  const PANE_WIDTH_KEY = "dnd_dice_pane_width_v1";
+  // 410, not 320 — below that the die tray's 3-per-row layout (3 × 118px
+  // dice + gaps, ~370px) no longer fits inside the roller column's own
+  // padding and the dice visibly overflow/clip instead of reflowing.
+  const PANE_MIN = 410;
+
+  function paneMax() {
+    // Leave the sheet at least this much room, regardless of how wide the
+    // window is, so dragging can never squeeze it away entirely.
+    return Math.max(PANE_MIN, window.innerWidth - 360);
+  }
+  function setDicePaneWidth(px, persist) {
+    const clamped = Math.round(Math.max(PANE_MIN, Math.min(paneMax(), px)));
+    dicePane.style.flexBasis = clamped + "px";
+    dicePane.style.width = clamped + "px";
+    if (persist) {
+      try { localStorage.setItem(PANE_WIDTH_KEY, String(clamped)); } catch (e) { /* ignore */ }
+    }
+  }
+  function loadPaneWidth() {
+    let saved = null;
+    try { saved = parseInt(localStorage.getItem(PANE_WIDTH_KEY), 10); } catch (e) { /* ignore */ }
+    if (saved && !isNaN(saved)) setDicePaneWidth(saved, false);
+  }
+  // The custom width only makes sense once roller + sheet are side by side —
+  // below that breakpoint the roller must stay full-width, or a width saved
+  // from a wide window would break the stacked phone/tablet layout.
+  const PANE_SPLIT_QUERY = "(min-width: 900px)";
+  function applyPaneWidthForViewport() {
+    if (window.matchMedia(PANE_SPLIT_QUERY).matches) {
+      loadPaneWidth();
+    } else {
+      dicePane.style.flexBasis = "";
+      dicePane.style.width = "";
+    }
+  }
+  window.addEventListener("resize", applyPaneWidthForViewport);
+
+  let resizing = false;
+  paneResizer.addEventListener("pointerdown", (e) => {
+    if (getComputedStyle(paneResizer).display === "none") return;
+    resizing = true;
+    paneResizer.classList.add("dragging");
+    paneResizer.setPointerCapture(e.pointerId);
+    document.body.style.userSelect = "none";
+  });
+  paneResizer.addEventListener("pointermove", (e) => {
+    if (!resizing) return;
+    const shellLeft = appShell.getBoundingClientRect().left;
+    setDicePaneWidth(e.clientX - shellLeft, false);
+  });
+  function stopResize() {
+    if (!resizing) return;
+    resizing = false;
+    paneResizer.classList.remove("dragging");
+    document.body.style.userSelect = "";
+    setDicePaneWidth(dicePane.getBoundingClientRect().width, true);
+  }
+  paneResizer.addEventListener("pointerup", stopResize);
+  paneResizer.addEventListener("pointercancel", stopResize);
+
+  // Keyboard: arrow keys nudge the split for people who can't drag a mouse
+  paneResizer.addEventListener("keydown", (e) => {
+    if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+    e.preventDefault();
+    const step = e.key === "ArrowRight" ? 24 : -24;
+    setDicePaneWidth(dicePane.getBoundingClientRect().width + step, true);
+    buzz(6);
+  });
+
   // ---------- Init ----------
   loadHistory();
   loadSettings();
   if (history.length) restoreLastRoll(history[0]);
   loadSheetData();
   renderSheetBody();
+  updateVitals();
+  applyPaneWidthForViewport();
+  setChromeHeight();
 })();
 </script>
 </body>
