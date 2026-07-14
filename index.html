@@ -389,12 +389,11 @@
   }
   .drawer.open { transform: translateX(0); }
 
-  /* Guide drawer slides in from the LEFT to distinguish it from history */
+  /* Guide drawer slides in from the LEFT to distinguish it from history.
+     Same width as the history drawer; only phones make it full-width. */
   .drawer.left {
     right: auto;
     left: 0;
-    width: 100%;
-    max-width: 100%;
     border-left: none;
     border-right: 1px solid var(--edge);
     box-shadow: 8px 0 30px rgba(0,0,0,0.5);
@@ -662,6 +661,34 @@
   .btn-cancel:hover { background: var(--face-lit); }
   .btn-danger { background: var(--crimson); color: #fff; border-color: var(--crimson); }
   .btn-danger:hover { background: var(--crimson-bright); }
+
+  /* ============ LAPTOP / DESKTOP — natural scrolling, tidy layout ============ */
+  @media (min-width: 641px) {
+    /* Don't stretch <main> to eat the viewport: that pushed the controls
+       below the fold on short laptop screens and left the page barely
+       scrollable. Let the document flow and grow so it scrolls cleanly. */
+    main {
+      flex: 0 0 auto;
+      justify-content: flex-start;
+      padding: 6px 16px 8px;
+    }
+
+    /* Trim the reserved result area so there isn't a huge gap up top */
+    .result-stage { min-height: 118px; margin: 4px 0 14px; }
+
+    /* 7 dice wrap as a balanced, centred 4 + 3 instead of left-aligned 5 + 2 */
+    .tray {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 18px;
+      max-width: 640px;
+    }
+    .die { flex: 0 0 140px; }
+
+    /* Controls sit right below the tray, always on screen */
+    .controls { margin: 18px auto 32px; }
+  }
 
   /* ============ PHONE OPTIMIZATION — single-screen, no-scroll ============ */
   @media (max-width: 640px) {
