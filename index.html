@@ -7,6 +7,25 @@
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="mobile-web-app-capable" content="yes" />
 <title>Kostky pro D&D</title>
+<script>
+  // Mobile browsers resize their own chrome (address bar, etc.) without
+  // reliably updating 100vh/100dvh in time, which is what let the page
+  // become scrollable. Measure the real visible height in JS instead and
+  // expose it as --app-height, kept live on every resize/orientation change.
+  (function () {
+    function setAppHeight() {
+      var h = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
+      document.documentElement.style.setProperty("--app-height", h + "px");
+    }
+    setAppHeight();
+    window.addEventListener("resize", setAppHeight);
+    window.addEventListener("orientationchange", setAppHeight);
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener("resize", setAppHeight);
+      window.visualViewport.addEventListener("scroll", setAppHeight);
+    }
+  })();
+</script>
 <style>
   :root {
     --bg-0: #0f0d1a;
@@ -427,7 +446,10 @@
   .drawer {
     position: fixed;
     top: 0; right: 0;
-    height: 100%;
+    /* Same fixed-element pitfall as the sheet panel: height:100% on a fixed
+       element can measure against the mobile browser's taller layout
+       viewport and make the whole page scrollable. */
+    height: var(--app-height, 100dvh);
     width: var(--drawer-w);
     max-width: 90vw;
     background: linear-gradient(180deg, var(--bg-1), var(--bg-0));
@@ -926,10 +948,15 @@
   }
   .spell-lvl textarea:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 2px rgba(217,180,90,0.2); }
 
-  /* Sheet is a focused full-screen task — collapse to edge-to-edge on phones */
+  /* Sheet is a focused full-screen task — collapse to edge-to-edge on phones.
+     Uses --app-height (JS-measured), not height:100% — a fixed element sized
+     with 100% can measure against the taller layout viewport on mobile
+     Safari (the one that includes the address-bar's space), which tricks
+     the browser into letting the whole page scroll to "reveal" it. */
   @media (max-width: 640px) {
     .sheet-panel {
-      width: 100%; max-width: 100%; height: 100%; max-height: 100%;
+      width: 100%; max-width: 100%;
+      height: var(--app-height, 100dvh); max-height: var(--app-height, 100dvh);
       top: 0; left: 0; transform: translateY(8px);
       border-radius: 0; border: none;
     }
@@ -988,9 +1015,11 @@
 
   /* ============ PHONE OPTIMIZATION — single-screen, no-scroll ============ */
   @media (max-width: 640px) {
-    /* Lock the page to the viewport; the layout fits without scrolling */
-    html, body { height: 100dvh; }
-    body { overflow: hidden; }
+    /* Lock the page to the viewport; the layout fits without scrolling.
+       --app-height is measured in JS (window.innerHeight/visualViewport),
+       since 100dvh doesn't always track the real visible area once the
+       mobile browser's own UI (address bar, etc.) resizes things. */
+    html, body { height: var(--app-height, 100dvh); overflow: hidden; }
 
     header {
       flex: 0 0 auto;
