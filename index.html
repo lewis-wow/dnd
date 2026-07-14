@@ -704,25 +704,32 @@
     border-left: 3px solid var(--gold);
     border-radius: 10px;
     padding: 10px 12px;
-    animation: slideIn 0.25s ease;
   }
   .hist-item.crit-hit { border-left-color: #6ee7a0; }
   .hist-item.crit-miss { border-left-color: var(--crimson-bright); }
+  /* Only the freshly-added roll gets the entrance animation (applied by JS
+     to that one item) — it used to sit on the base rule, unconditionally,
+     which meant every render (including a delete, which re-renders the
+     WHOLE list) replayed it on every remaining row too. */
+  .hist-item.hist-new { animation: slideIn 0.25s ease; }
   @keyframes slideIn {
     from { opacity: 0; transform: translateX(20px); }
     to { opacity: 1; transform: translateX(0); }
   }
-  .hist-item.removing {
-    animation: slideOut 0.24s ease forwards;
-    overflow: hidden;
+  /* The "ghost": a clone of a just-deleted row, pulled out of flow at its
+     exact on-screen position so the real removal + sibling reflow happens
+     in one instant synchronous step (see the click handler) while this
+     fades out on top of it. Animating layout properties directly here
+     instead (max-height/margin collapsing) kept causing visible stutter in
+     Blink, since the browser had to re-run flex layout every single frame
+     of the animation. */
+  .hist-ghost {
+    position: fixed;
+    z-index: 60;
+    pointer-events: none;
+    transition: opacity .2s ease, transform .2s ease;
   }
-  /* No horizontal movement here (unlike slideIn) — sliding the item
-     sideways as it left is what actually read as the list "shifting on
-     the x-axis" on delete. A pure vertical collapse + fade removes it
-     without anything visibly moving sideways. */
-  @keyframes slideOut {
-    to { opacity: 0; max-height: 0; padding-top: 0; padding-bottom: 0; margin-top: -10px; }
-  }
+  .hist-ghost.fade { opacity: 0; transform: scale(0.96); }
 
   /* Die shape on the left of each history row */
   .hist-shape { flex: 0 0 auto; width: 38px; height: 38px; }
@@ -2089,7 +2096,7 @@
     history.unshift(entry);
     if (history.length > MAX_HISTORY) history.length = MAX_HISTORY;
     saveHistory();
-    renderHistory();
+    renderHistory(entry.id);
   }
 
   function formatTime(ts) {
@@ -2100,7 +2107,11 @@
     });
   }
 
-  function renderHistory() {
+  // newestId: when set, only THAT row gets the entrance animation — every
+  // other row is left alone, since this fully re-renders the list (a
+  // delete calls this too, and every remaining row would otherwise replay
+  // the entrance animation it already played).
+  function renderHistory(newestId) {
     histCountEl.textContent = history.length;
     clearCountEl.textContent = history.length;
     clearHistoryBtn.disabled = history.length === 0;
@@ -2142,6 +2153,11 @@
           <button class="hist-delete" data-id="${h.id}" aria-label="Smazat tento hod" title="Smazat tento hod">×</button>
         </div>`;
     }).join("");
+
+    if (newestId) {
+      const btn = historyList.querySelector('.hist-delete[data-id="' + CSS.escape(newestId) + '"]');
+      if (btn) btn.closest(".hist-item").classList.add("hist-new");
+    }
   }
 
   // ---------- Quantity ----------
@@ -2244,43 +2260,68 @@
   });
 
   // ---------- Delete a single roll ----------
+  // FLIP technique: the actual DOM removal + sibling reflow happens in one
+  // synchronous step (no CSS transition on layout properties at all), and
+  // only compositor-friendly opacity/transform are animated afterwards —
+  // a "ghost" clone fades out over the deleted row's old position while
+  // the real remaining rows get a translateY nudged back to where they
+  // used to be, then eased to zero. Animating max-height/margin directly
+  // (the previous approach) forced the browser to re-run flex layout on
+  // every animation frame, which showed up as visible stutter/shift in
+  // Blink.
   historyList.addEventListener("click", (e) => {
     const btn = e.target.closest(".hist-delete");
     if (!btn) return;
     const id = btn.dataset.id;
     const item = btn.closest(".hist-item");
+    buzz(15);
 
-    let done = false;
-    const removeIt = () => {
-      if (done) return;
-      done = true;
-      // renderHistory() replaces the whole list's innerHTML, which resets
-      // its scroll position to the top — jarring if you'd scrolled down to
-      // delete an older roll. Capture and restore it across the re-render.
-      const scrollTop = historyList.scrollTop;
-      history = history.filter((h) => h.id !== id);
-      saveHistory();
-      renderHistory();
-      historyList.scrollTop = scrollTop;
-    };
+    const scrollTop = historyList.scrollTop;
 
-    // Animate out, then remove
+    const beforeRects = new Map();
+    historyList.querySelectorAll(".hist-delete").forEach((b) => {
+      beforeRects.set(b.dataset.id, b.closest(".hist-item").getBoundingClientRect());
+    });
+
+    let ghost = null;
     if (item) {
-      buzz(15);
-      // The slide-out keyframe animates max-height down to 0, but it starts
-      // unset (max-height: none) — browsers can't interpolate from "none",
-      // so the collapse just snaps in partway through instead of animating,
-      // yanking every item below it upward. Give it a concrete starting
-      // pixel value first so the whole collapse animates smoothly.
-      item.style.maxHeight = item.getBoundingClientRect().height + "px";
-      void item.offsetHeight; // force reflow so the browser registers it before animating
-      item.classList.add("removing");
-      item.addEventListener("animationend", removeIt, { once: true });
-      // Fallback in case animationend doesn't fire
-      setTimeout(removeIt, 260);
-    } else {
-      removeIt();
+      const r = item.getBoundingClientRect();
+      ghost = item.cloneNode(true);
+      ghost.classList.add("hist-ghost");
+      ghost.style.left = r.left + "px";
+      ghost.style.top = r.top + "px";
+      ghost.style.width = r.width + "px";
+      document.body.appendChild(ghost);
     }
+
+    history = history.filter((h) => h.id !== id);
+    saveHistory();
+    renderHistory();
+    historyList.scrollTop = scrollTop;
+
+    if (ghost) {
+      // Force a reflow between setting the initial state and requesting
+      // the transition, so the browser can't collapse the two into one
+      // frame and skip the animation entirely.
+      void ghost.offsetHeight;
+      requestAnimationFrame(() => ghost.classList.add("fade"));
+      setTimeout(() => ghost.remove(), 240);
+    }
+
+    historyList.querySelectorAll(".hist-delete").forEach((b) => {
+      const before = beforeRects.get(b.dataset.id);
+      if (!before) return;
+      const row = b.closest(".hist-item");
+      const dy = before.top - row.getBoundingClientRect().top;
+      if (Math.abs(dy) < 0.5) return;
+      row.style.transition = "none";
+      row.style.transform = "translateY(" + dy + "px)";
+      void row.offsetHeight;
+      requestAnimationFrame(() => {
+        row.style.transition = "transform .22s ease";
+        row.style.transform = "";
+      });
+    });
   });
 
   // ---------- Clear history + confirm dialog ----------
