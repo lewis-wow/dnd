@@ -224,7 +224,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 20px 16px 40px;
+    padding: 8px 16px 40px;
     width: 100%;
   }
 
@@ -544,18 +544,17 @@
      No longer a sliding overlay drawer — it's the first column in the
      app-shell, resizable by dragging #guideResizer just like the roller
      and Deník already are, collapsible all the way down to 0 width and
-     back. Hidden by default on phones/narrow screens (no room for a third
-     column there — see .guide-pane.open below); the topbar button just
-     toggles visibility there instead of width. */
+     back open again. On phones/narrow screens (no room for a third
+     column) it's just always visible, stacked above the roller, same as
+     the Deník already is — nothing to toggle there, no button needed. */
   .guide-pane {
-    display: none;
+    display: flex;
     flex-direction: column;
     width: 100%;
     min-width: 0;
     background: linear-gradient(180deg, var(--bg-1), var(--bg-0));
     border-bottom: 1px solid var(--edge);
   }
-  .guide-pane.open { display: flex; }
   .guide-pane-head {
     display: flex;
     align-items: center;
@@ -566,20 +565,27 @@
     flex: 0 0 auto;
   }
   .guide-pane-head h2 { margin: 0; font-size: 1.1rem; color: var(--gold); letter-spacing: 1px; }
-  .guide-collapse-btn {
-    background: transparent;
-    border: 1px solid var(--edge);
-    color: var(--text-dim);
-    border-radius: 10px;
-    width: 34px;
-    height: 34px;
-    flex: 0 0 auto;
-    cursor: pointer;
-    font-size: 1.1rem;
-    line-height: 1;
-    transition: border-color .2s, color .2s, background .2s;
+  /* Only meaningful once the guide can actually be collapsed — that's a
+     width thing, and widths only apply once the guide sits beside the
+     roller as its own column (see the min-width:900px override below). */
+  .guide-collapse-btn { display: none; }
+  @media (min-width: 900px) {
+    .guide-collapse-btn {
+      display: block;
+      background: transparent;
+      border: 1px solid var(--edge);
+      color: var(--text-dim);
+      border-radius: 10px;
+      width: 34px;
+      height: 34px;
+      flex: 0 0 auto;
+      cursor: pointer;
+      font-size: 1.1rem;
+      line-height: 1;
+      transition: border-color .2s, color .2s, background .2s;
+    }
+    .guide-collapse-btn:hover { border-color: var(--gold); color: var(--gold-bright); background: var(--face); }
   }
-  .guide-collapse-btn:hover { border-color: var(--gold); color: var(--gold-bright); background: var(--face); }
 
   /* ---------- Guide (Příručka) content ---------- */
   .guide-body {
@@ -883,6 +889,18 @@
     width: 100%;
     min-width: 0;
   }
+  /* Same icon+title head pattern as the Deník and guide panes, so the
+     roller reads as a consistent third "section" alongside them instead
+     of being the odd one out with no header of its own. */
+  .dice-pane-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--edge);
+    flex: 0 0 auto;
+  }
+  .dice-pane-head h2 { margin: 0; font-size: 1.1rem; color: var(--gold); letter-spacing: 1px; }
   /* Only meaningful once the roller and sheet sit side by side */
   .pane-resizer { display: none; }
 
@@ -894,12 +912,6 @@
     min-width: 0;
     background: linear-gradient(180deg, var(--bg-1), var(--bg-0));
     border-top: 1px solid var(--edge);
-    /* The section-column count below responds to the PANE's own rendered
-       width, not the viewport — the pane can be dragged narrower than the
-       window via the resizer, and columns should collapse right along
-       with it rather than staying stuck at whatever the viewport allows. */
-    container-type: inline-size;
-    container-name: sheetpane;
   }
 
   .sheet-head {
@@ -927,12 +939,26 @@
   }
   .sheet-clear-btn:hover { border-color: var(--crimson); color: var(--crimson-bright); background: rgba(160,44,58,0.12); }
 
+  /* Real column CONTAINERS (.sheet-col, built in JS — see
+     computeSheetColCount/distributeIntoColumns), not CSS column-count.
+     column-count auto-balances by height and recalculates which items
+     land in which column from scratch whenever the DOM order changes —
+     so dragging a section into what looks like column 2 could silently
+     land it back in column 1 once the browser re-balanced. Real
+     containers mean a drop is a real DOM move into that exact column. */
   .sheet-body {
     flex: 1 1 auto;
     padding: 16px 20px 32px;
     display: flex;
+    align-items: flex-start;
+    gap: 18px;
+  }
+  .sheet-col {
+    display: flex;
     flex-direction: column;
     gap: 10px;
+    flex: 1 1 0;
+    min-width: 0;
   }
 
   /* Sections are always fully expanded — everything is on screen without
@@ -1238,7 +1264,7 @@
     main {
       flex: 0 0 auto;
       justify-content: flex-start;
-      padding: 16px 16px 8px;
+      padding: 6px 16px 8px;
     }
 
     /* Trim the reserved result area so there isn't a huge gap up top */
@@ -1360,34 +1386,18 @@
     .result-die { height: 68px; }
     .rd-inner { width: 68px; height: 68px; }
 
-    main { padding: 10px 16px 4px; }
+    main { padding: 4px 16px 4px; }
 
     .controls { margin: 10px auto 16px; gap: 8px; }
     .qty-control, .mod-control { padding: 6px 10px; }
+    .dice-pane-head { padding: 10px 16px; }
+    .dice-pane-head h2 { font-size: 0.98rem; }
   }
 
-  /* Sections read as two parallel columns once the PANE ITSELF has room —
-     basic info and every stat visible with far less scrolling. Tied to the
-     pane's own width (a container query) rather than the viewport, so
-     dragging the resizer narrower correctly collapses this back to one
-     column instead of staying stuck at two and looking cramped. */
-  @container sheetpane (min-width: 660px) {
-    .sheet-body {
-      display: block;
-      column-count: 2;
-      column-gap: 18px;
-    }
-    .sheet-section {
-      break-inside: avoid;
-      -webkit-column-break-inside: avoid;
-      margin-bottom: 18px;
-    }
-  }
-  /* Dragging the roller down to its minimum frees up enough room for a
-     third column. */
-  @container sheetpane (min-width: 1020px) {
-    .sheet-body { column-count: 3; }
-  }
+  /* Column COUNT (1/2/3) is computed in JS from the pane's own rendered
+     width via a ResizeObserver — see computeSheetColCount — so it reacts
+     to the drag resizer exactly like the old container-query version did,
+     just with real .sheet-col containers instead of CSS column-count. */
 
   /* ============ PHONE OPTIMIZATION ============ */
   @media (max-width: 640px) {
@@ -1417,6 +1427,9 @@
     .topbar-actions button { padding: 8px 10px; min-height: 40px; }
     /* Save width: drop the button labels, keep icon + count */
     .topbar-actions button .btn-text { display: none; }
+
+    .dice-pane-head { padding: 8px 14px; flex: 0 0 auto; }
+    .dice-pane-head h2 { font-size: 0.95rem; }
 
     /* Middle region: fills leftover space, never scrolls, centres its content */
     main {
@@ -1557,6 +1570,7 @@
       <div class="vital-chip vital-insp" id="vitalInsp">
         <span class="vital-ico">⭐</span>
         <span class="vital-label">Inspirace</span>
+        <span class="vital-val" id="vitalInspVal">0</span>
       </div>
       <div class="vital-chip">
         <span class="vital-ico">🎯</span>
@@ -1582,9 +1596,6 @@
     </div>
 
     <div class="topbar-actions">
-      <button class="guide-btn" id="openGuide" aria-label="Otevřít příručku">
-        📖 <span class="btn-text">Příručka</span>
-      </button>
       <button class="history-btn" id="openDrawer" aria-label="Otevřít historii">
         📜 <span class="btn-text">Historie</span> <span class="count" id="histCount">0</span>
       </button>
@@ -1768,6 +1779,9 @@
          aria-label="Změnit šířku příručky" tabindex="0"></div>
 
     <div class="dice-pane">
+      <div class="dice-pane-head">
+        <h2>🎲 Hoď kostkou</h2>
+      </div>
       <main>
         <div class="result-stage">
           <div class="result-die" id="resultDie" aria-hidden="true"></div>
@@ -1909,6 +1923,7 @@
   const vitalSpeed = document.getElementById("vitalSpeed");
   const vitalHp = document.getElementById("vitalHp");
   const vitalInsp = document.getElementById("vitalInsp");
+  const vitalInspVal = document.getElementById("vitalInspVal");
   const vitalProf = document.getElementById("vitalProf");
   const vitalAbil = {
     str: document.getElementById("vitalAbilStr"),
@@ -1937,7 +1952,9 @@
     vitalSpeed.textContent = sheet.speed || "—";
     const cur = sheet.currentHp || "", max = sheet.maxHp || "";
     vitalHp.textContent = (cur || max) ? (cur || "?") + " / " + (max || "?") : "—";
-    vitalInsp.classList.toggle("on", !!sheet.inspiration);
+    const inspCount = parseInt(sheet.inspiration, 10) || 0;
+    vitalInspVal.textContent = inspCount;
+    vitalInsp.classList.toggle("on", inspCount > 0);
     vitalProf.textContent = sheet.profBonus || "—";
     Object.keys(vitalAbil).forEach((key) => {
       vitalAbil[key].textContent = abilityMod(sheet[key + "_score"]);
@@ -2313,7 +2330,6 @@
     drawer.classList.contains("open") ? closeDrawer() : openDrawer();
   });
   document.getElementById("closeDrawer").addEventListener("click", closeDrawer);
-  document.getElementById("openGuide").addEventListener("click", () => toggleGuide());
   document.getElementById("collapseGuide").addEventListener("click", () => closeGuidePane());
   overlay.addEventListener("click", closeDrawer);
 
@@ -2413,13 +2429,15 @@
   });
 
   // Keyboard: Esc closes the history drawer / collapses the guide pane
+  // (collapsing only means anything once the guide is its own resizable
+  // column — on phones/narrow screens it's always visible, like the
+  // Deník, with nothing to collapse).
   document.addEventListener("keydown", (e) => {
     if (e.key !== "Escape") return;
     if (drawer.classList.contains("open")) closeDrawer();
-    const guideOpen = window.matchMedia(PANE_SPLIT_QUERY).matches
-      ? guidePane.getBoundingClientRect().width > 4
-      : guidePane.classList.contains("open");
-    if (guideOpen) closeGuidePane();
+    if (window.matchMedia(PANE_SPLIT_QUERY).matches && guidePane.getBoundingClientRect().width > 4) {
+      closeGuidePane();
+    }
   });
 
   // ---------- Persisted settings (dice count + modifier) ----------
@@ -2523,7 +2541,7 @@
       { key: "alignment", label: "Přesvědčení", type: "select", options: ALIGNMENTS, placeholder: "Vyber přesvědčení…" },
       { key: "xp", label: "Body zkušenosti" },
       { key: "profBonus", label: "Zdatnostní bonus" },
-      { key: "inspiration", label: "Inspirace", type: "checkbox" }
+      { key: "inspiration", label: "Inspirace", type: "select", options: ["1", "2", "3", "4", "5"], placeholder: "0" }
     ]},
     { id: "combat", icon: "⚔️", title: "Boj a životy", fields: [
       { key: "ac", label: "OČ (obranné číslo)" },
@@ -2727,10 +2745,62 @@
   // Drag via pointer events (not the HTML5 Drag-and-drop API — that one
   // has no real touch support, and this app is heavily used on phones).
   // Whatever section is actually rendered under the pointer becomes the
-  // swap target, found with elementFromPoint rather than a Y-coordinate
-  // comparison — the sheet can be laid out in 1/2/3 CSS columns, where
-  // visual neighbours aren't necessarily DOM neighbours.
+  // swap target, found with elementFromPoint. Sections live inside real
+  // .sheet-col containers (not CSS column-count), so a move always
+  // targets the specific column under the pointer, not just sheetBody as
+  // a whole — that's what makes dropping into a different column actually
+  // land there instead of being silently reshuffled back.
   let dragSection = null;
+  let dragPointerX = 0, dragPointerY = 0;
+
+  // Re-evaluated every animation frame (not just on pointermove) so that
+  // auto-scrolling — which moves content under an otherwise-still pointer —
+  // keeps re-targeting correctly instead of only reacting to the next
+  // actual mouse/touch movement.
+  function updateDragTarget(clientX, clientY) {
+    const target = document.elementFromPoint(clientX, clientY);
+    if (!target) return;
+    const overSection = target.closest(".sheet-section");
+    if (overSection && overSection !== dragSection) {
+      const col = overSection.closest(".sheet-col");
+      if (!col) return;
+      const rect = overSection.getBoundingClientRect();
+      const before = clientY < rect.top + rect.height / 2;
+      col.insertBefore(dragSection, before ? overSection : overSection.nextSibling);
+      return;
+    }
+    // Pointer is over a column but not over any specific section in it —
+    // past the last item, or the column is empty. Drop it at the end.
+    const overCol = target.closest(".sheet-col");
+    if (overCol && overCol !== dragSection.parentElement) {
+      overCol.appendChild(dragSection);
+    }
+  }
+
+  // Auto-scroll near the top/bottom edge of whichever element actually
+  // scrolls (the sheet pane itself once it has its own scrollbar at wide
+  // widths; the whole page below that) — otherwise a section long enough
+  // to need scrolling to reach could never be dragged past the fold.
+  const AUTOSCROLL_EDGE = 60;
+  const AUTOSCROLL_SPEED = 16;
+  function autoScrollStep() {
+    if (!dragSection) return;
+    const scroller = sheetPane.scrollHeight > sheetPane.clientHeight ? sheetPane : null;
+    const rect = scroller ? scroller.getBoundingClientRect() : { top: 0, bottom: window.innerHeight };
+    let dy = 0;
+    if (dragPointerY < rect.top + AUTOSCROLL_EDGE) {
+      dy = -AUTOSCROLL_SPEED * (1 - Math.max(0, dragPointerY - rect.top) / AUTOSCROLL_EDGE);
+    } else if (dragPointerY > rect.bottom - AUTOSCROLL_EDGE) {
+      dy = AUTOSCROLL_SPEED * (1 - Math.max(0, rect.bottom - dragPointerY) / AUTOSCROLL_EDGE);
+    }
+    if (dy !== 0) {
+      if (scroller) scroller.scrollTop += dy;
+      else window.scrollBy(0, dy);
+      updateDragTarget(dragPointerX, dragPointerY);
+    }
+    requestAnimationFrame(autoScrollStep);
+  }
+
   sheetBody.addEventListener("pointerdown", (e) => {
     const handle = e.target.closest(".sheet-drag-handle");
     if (!handle) return;
@@ -2738,18 +2808,18 @@
     if (!section) return;
     e.preventDefault();
     dragSection = section;
+    dragPointerX = e.clientX;
+    dragPointerY = e.clientY;
     section.classList.add("dragging");
     handle.setPointerCapture(e.pointerId);
     buzz(8);
+    requestAnimationFrame(autoScrollStep);
   });
   sheetBody.addEventListener("pointermove", (e) => {
     if (!dragSection) return;
-    const target = document.elementFromPoint(e.clientX, e.clientY);
-    const overSection = target && target.closest && target.closest(".sheet-section");
-    if (!overSection || overSection === dragSection || overSection.parentElement !== sheetBody) return;
-    const rect = overSection.getBoundingClientRect();
-    const before = e.clientY < rect.top + rect.height / 2;
-    sheetBody.insertBefore(dragSection, before ? overSection : overSection.nextSibling);
+    dragPointerX = e.clientX;
+    dragPointerY = e.clientY;
+    updateDragTarget(e.clientX, e.clientY);
   });
   function endSheetDrag() {
     if (!dragSection) return;
@@ -2791,9 +2861,48 @@
       `<div class="sheet-section-body" id="sheetSecBody_${sec.id}">${buildSectionBody(sec)}</div></div>`;
   }
 
-  function renderSheetBody() {
-    sheetBody.innerHTML = orderedSheetSections().map(renderSection).join("");
+  // Splits sections into N real column containers, as evenly as possible
+  // by count (e.g. 9 sections / 2 cols → 5, 4). Simpler than balancing by
+  // rendered height, and — unlike CSS column-count — completely stable
+  // under reordering: a section's column membership is a direct function
+  // of its position in the order, not something the browser silently
+  // recomputes on every DOM change.
+  function distributeIntoColumns(sections, numCols) {
+    const cols = Array.from({ length: numCols }, () => []);
+    let idx = 0, remaining = sections.length;
+    for (let c = 0; c < numCols; c++) {
+      const colsLeft = numCols - c;
+      const take = Math.ceil(remaining / colsLeft);
+      for (let i = 0; i < take; i++) cols[c].push(sections[idx++]);
+      remaining -= take;
+    }
+    return cols;
   }
+
+  function computeSheetColCount() {
+    const w = sheetPane.getBoundingClientRect().width;
+    return w >= 1020 ? 3 : w >= 660 ? 2 : 1;
+  }
+  let sheetColCount = 1;
+
+  function renderSheetBody() {
+    const cols = distributeIntoColumns(orderedSheetSections(), sheetColCount);
+    sheetBody.innerHTML = cols
+      .map((colSections) => `<div class="sheet-col">${colSections.map(renderSection).join("")}</div>`)
+      .join("");
+  }
+
+  // The pane's width changes both from window resizes and from dragging
+  // the pane resizer — a ResizeObserver catches both uniformly and
+  // re-renders (picking a new column count) only when the count actually
+  // needs to change.
+  new ResizeObserver(() => {
+    const next = computeSheetColCount();
+    if (next !== sheetColCount) {
+      sheetColCount = next;
+      renderSheetBody();
+    }
+  }).observe(sheetPane);
 
   function loadSheetData() {
     try {
@@ -3070,27 +3179,11 @@
     buzz(6);
   });
 
-  // Topbar button + the pane's own « button: at split-view widths this
-  // just toggles between 0 and a sensible default width (dragging is the
-  // real way to pick an exact width); below that it's a plain show/hide
-  // toggle of the whole full-width block.
-  function toggleGuide() {
-    if (window.matchMedia(PANE_SPLIT_QUERY).matches) {
-      const current = guidePane.getBoundingClientRect().width;
-      setGuidePaneWidth(current > 4 ? 0 : GUIDE_DEFAULT, true);
-    } else {
-      const nowOpen = guidePane.classList.toggle("open");
-      guidePane.setAttribute("aria-hidden", nowOpen ? "false" : "true");
-    }
-    buzz(8);
-  }
+  // The pane's own « button: collapses it to 0 width. Only wired/visible
+  // at split-view widths — on phones/narrow screens the guide is always
+  // visible (like the Deník), nothing to collapse.
   function closeGuidePane() {
-    if (window.matchMedia(PANE_SPLIT_QUERY).matches) {
-      setGuidePaneWidth(0, true);
-    } else {
-      guidePane.classList.remove("open");
-      guidePane.setAttribute("aria-hidden", "true");
-    }
+    setGuidePaneWidth(0, true);
     buzz(6);
   }
 
@@ -3099,13 +3192,16 @@
   loadSettings();
   if (history.length) restoreLastRoll(history[0]);
   loadSheetData();
-  renderSheetBody();
-  updateVitals();
+  // Pane widths first, so the sheet already has its real final width (not
+  // the pre-drag default) before the first column-count calculation.
   applyPaneWidthForViewport();
   applyGuideWidthForViewport();
+  sheetColCount = computeSheetColCount();
+  renderSheetBody();
+  updateVitals();
   setChromeHeight();
-  // Wait a frame so the sheet's full (container-query-driven) layout has
-  // actually settled before reading/restoring scroll position against it.
+  // Wait a frame so the sheet's full layout has actually settled before
+  // reading/restoring scroll position against it.
   requestAnimationFrame(restoreSheetScroll);
 })();
 </script>
