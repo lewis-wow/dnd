@@ -714,6 +714,230 @@
   .btn-danger { background: var(--crimson); color: #fff; border-color: var(--crimson); }
   .btn-danger:hover { background: var(--crimson-bright); }
 
+  /* ---------- Character sheet (Deník postavy) ---------- */
+  .sheet-scrim {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.65);
+    backdrop-filter: blur(2px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s;
+    z-index: 70;
+  }
+  .sheet-scrim.open { opacity: 1; pointer-events: auto; }
+
+  .sheet-panel {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    width: min(920px, 94vw);
+    max-height: 88vh;
+    transform: translate(-50%, -48%) scale(0.97);
+    background: linear-gradient(180deg, var(--bg-1), var(--bg-0));
+    border: 1px solid var(--edge);
+    border-radius: 18px;
+    box-shadow: 0 24px 70px rgba(0,0,0,0.6);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease, transform 0.3s cubic-bezier(.4,0,.2,1);
+    z-index: 71;
+    display: flex;
+    flex-direction: column;
+  }
+  .sheet-panel.open {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translate(-50%, -50%) scale(1);
+  }
+
+  .sheet-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 18px 20px;
+    border-bottom: 1px solid var(--edge);
+    flex: 0 0 auto;
+  }
+  .sheet-head h2 { margin: 0; font-size: 1.15rem; color: var(--gold); letter-spacing: 1px; }
+  .sheet-head-actions { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; }
+  .sheet-clear-btn {
+    background: transparent;
+    border: 1px solid var(--edge);
+    color: var(--text-dim);
+    border-radius: 10px;
+    padding: 8px 12px;
+    font-size: 0.78rem;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: border-color .2s, color .2s, background .2s;
+  }
+  .sheet-clear-btn:hover { border-color: var(--crimson); color: var(--crimson-bright); background: rgba(160,44,58,0.12); }
+
+  .sheet-body {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    padding: 16px 20px 26px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .sheet-body::-webkit-scrollbar { width: 8px; }
+  .sheet-body::-webkit-scrollbar-thumb { background: var(--edge); border-radius: 4px; }
+
+  /* Generic label+input field grid used inside most sections */
+  .sheet-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    gap: 12px;
+    margin: 10px 0 4px;
+  }
+  .sheet-field { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+  .sheet-field.wide { grid-column: 1 / -1; }
+  .sheet-field label {
+    color: var(--text-dim);
+    font-size: 0.68rem;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+  }
+  .sheet-field input[type="text"], .sheet-field textarea {
+    background: var(--face);
+    border: 1px solid var(--edge);
+    color: var(--text);
+    border-radius: 8px;
+    padding: 9px 10px;
+    font-size: 0.92rem;
+    font-family: inherit;
+    width: 100%;
+  }
+  .sheet-field textarea { resize: vertical; min-height: 76px; line-height: 1.5; }
+  .sheet-field input:focus, .sheet-field textarea:focus {
+    outline: none;
+    border-color: var(--gold);
+    box-shadow: 0 0 0 2px rgba(217,180,90,0.2);
+  }
+
+  /* Ability score cards (with nested saves + skills) */
+  .ab-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 12px;
+    margin: 10px 0 4px;
+  }
+  .ab-card {
+    background: var(--bg-1);
+    border: 1px solid var(--edge);
+    border-radius: 12px;
+    padding: 12px 14px 14px;
+  }
+  .ab-card .ab-name { color: var(--gold-bright); font-weight: 700; letter-spacing: 1px; font-size: 0.85rem; margin-bottom: 8px; }
+  .ab-card .ab-score {
+    width: 100%;
+    text-align: center;
+    font-size: 1.3rem;
+    font-weight: 800;
+    background: var(--face);
+    border: 1px solid var(--edge);
+    border-radius: 8px;
+    color: var(--text);
+    padding: 8px;
+    margin-bottom: 10px;
+    font-family: inherit;
+  }
+  .ab-card .ab-score:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 2px rgba(217,180,90,0.2); }
+  .ab-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 0;
+    border-top: 1px solid rgba(58,47,82,0.5);
+  }
+  .ab-row:first-of-type { border-top: none; }
+  /* Wrapping the checkbox + text in a <label> makes the whole row clickable,
+     not just the tiny checkbox box — native browser behaviour, no JS needed. */
+  .ab-row .ab-check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1 1 auto;
+    min-width: 0;
+    cursor: pointer;
+  }
+  .ab-row input[type="checkbox"] { accent-color: var(--gold); width: 15px; height: 15px; flex: 0 0 auto; cursor: pointer; }
+  .ab-row .ab-check span { flex: 1 1 auto; font-size: 0.8rem; color: var(--text); min-width: 0; }
+  .ab-row input[type="text"] {
+    width: 44px;
+    flex: 0 0 auto;
+    text-align: center;
+    background: var(--face);
+    border: 1px solid var(--edge);
+    border-radius: 6px;
+    color: var(--text);
+    padding: 4px 2px;
+    font-size: 0.82rem;
+    font-family: inherit;
+  }
+  .ab-row input[type="text"]:focus { outline: none; border-color: var(--gold); }
+
+  /* Spellcasting level cards */
+  .spell-lvl {
+    background: var(--bg-1);
+    border: 1px solid var(--edge);
+    border-radius: 12px;
+    padding: 12px 14px;
+  }
+  .spell-lvl-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+  .spell-lvl-head .lvl-badge {
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    border: 1px solid var(--gold);
+    color: var(--gold-bright);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 0.8rem;
+    flex: 0 0 auto;
+  }
+  .spell-lvl-head .lvl-title { color: var(--gold); font-weight: 700; font-size: 0.85rem; letter-spacing: 0.5px; flex: 1 1 auto; }
+  .spell-lvl-head label { color: var(--text-dim); font-size: 0.66rem; letter-spacing: 0.4px; margin-right: 2px; }
+  .spell-lvl-head input[type="text"] {
+    width: 52px;
+    text-align: center;
+    background: var(--face);
+    border: 1px solid var(--edge);
+    border-radius: 6px;
+    color: var(--text);
+    padding: 5px 2px;
+    font-size: 0.8rem;
+    font-family: inherit;
+  }
+  .spell-lvl textarea {
+    width: 100%;
+    min-height: 60px;
+    background: var(--face);
+    border: 1px solid var(--edge);
+    color: var(--text);
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 0.88rem;
+    font-family: inherit;
+    resize: vertical;
+    line-height: 1.5;
+  }
+  .spell-lvl textarea:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 2px rgba(217,180,90,0.2); }
+
+  /* Sheet is a focused full-screen task — collapse to edge-to-edge on phones */
+  @media (max-width: 640px) {
+    .sheet-panel {
+      width: 100%; max-width: 100%; height: 100%; max-height: 100%;
+      top: 0; left: 0; transform: translateY(8px);
+      border-radius: 0; border: none;
+    }
+    .sheet-panel.open { transform: translateY(0); }
+    .sheet-head { padding: 14px 16px calc(14px + env(safe-area-inset-top)) 16px; }
+    .sheet-body { padding: 14px 16px calc(14px + env(safe-area-inset-bottom)); }
+  }
+
   /* ============ LAPTOP / DESKTOP — natural scrolling, tidy layout ============ */
   @media (min-width: 641px) {
     /* Don't stretch <main> to eat the viewport: that pushed the controls
@@ -894,6 +1118,9 @@
 
   <header>
     <div class="header-actions-left">
+      <button class="sheet-btn" id="openSheet" aria-label="Otevřít deník postavy">
+        📝 <span class="btn-text">Deník</span>
+      </button>
       <button class="guide-btn" id="openGuide" aria-label="Otevřít příručku">
         📖 <span class="btn-text">Příručka</span>
       </button>
@@ -1127,7 +1354,22 @@
     </div>
   </aside>
 
-  <!-- Confirm dialog -->
+  <!-- Deník postavy (character sheet) — a focused full-screen sheet, not a
+       docked drawer: it's an editing task, not something you keep open
+       while rolling, so it dims and covers the whole page like a dialog. -->
+  <div class="sheet-scrim" id="sheetScrim"></div>
+  <div class="sheet-panel" id="sheetPanel" aria-hidden="true" role="dialog" aria-label="Deník postavy">
+    <div class="sheet-head">
+      <h2>📝 Deník postavy</h2>
+      <div class="sheet-head-actions">
+        <button class="sheet-clear-btn" id="sheetClearBtn" title="Smazat celý deník">🗑 Smazat</button>
+        <button class="drawer-close" id="closeSheet" aria-label="Zavřít">×</button>
+      </div>
+    </div>
+    <div class="sheet-body" id="sheetBody"></div>
+  </div>
+
+  <!-- Confirm dialogs -->
   <dialog id="confirmDialog">
     <div class="dialog-body">
       <h3>Smazat historii?</h3>
@@ -1139,12 +1381,24 @@
     </div>
   </dialog>
 
+  <dialog id="sheetClearDialog">
+    <div class="dialog-body">
+      <h3>Smazat deník postavy?</h3>
+      <p>Tímto trvale odstraníš všechny uložené údaje o postavě. Tuto akci nelze vrátit zpět.</p>
+    </div>
+    <div class="dialog-actions">
+      <button class="btn-cancel" id="cancelSheetClear">Zrušit</button>
+      <button class="btn-danger" id="confirmSheetClear">Smazat vše</button>
+    </div>
+  </dialog>
+
 <script>
 (function () {
   "use strict";
 
   const STORAGE_KEY = "dnd_dice_history_v1";
   const SETTINGS_KEY = "dnd_dice_settings_v1";
+  const SHEET_KEY = "dnd_character_sheet_v1";
   const MAX_HISTORY = 200;
 
   // Polyhedral dice definitions. Each shape is an SVG polygon approximating the real die.
@@ -1162,6 +1416,7 @@
   let quantity = 1;
   let rollMode = "normal"; // "normal" | "adv" (Výhoda) | "dis" (Nevýhoda)
   let history = [];
+  let sheet = {}; // character sheet field values, keyed by field key
 
   // ---------- DOM ----------
   const tray = document.getElementById("tray");
@@ -1177,6 +1432,10 @@
   const confirmDialog = document.getElementById("confirmDialog");
   const advBtn = document.getElementById("advBtn");
   const disBtn = document.getElementById("disBtn");
+  const sheetScrim = document.getElementById("sheetScrim");
+  const sheetPanel = document.getElementById("sheetPanel");
+  const sheetBody = document.getElementById("sheetBody");
+  const sheetClearDialog = document.getElementById("sheetClearDialog");
 
   // ---------- Build dice tray ----------
   DICE.forEach((die) => {
@@ -1610,9 +1869,10 @@
     if (!inside) confirmDialog.close();
   });
 
-  // Keyboard: Esc closes whichever drawer is open
+  // Keyboard: Esc closes the sheet, or whichever drawer is open
   document.addEventListener("keydown", (e) => {
     if (e.key !== "Escape") return;
+    if (sheetPanel.classList.contains("open")) { closeSheet(); return; }
     if (drawer.classList.contains("open") || guideDrawer.classList.contains("open")) {
       closeAllDrawers();
     }
@@ -1665,10 +1925,260 @@
     showResult(die, rolls, mod, total - mod, total, qty, h.mode, h.alt);
   }
 
+  // ---------- Character sheet (Deník postavy) ----------
+  // A digital twin of the official D&D character sheet: every field just
+  // mirrors a blank on the paper form and is stored as-is (no derived maths),
+  // so it stays simple and never disagrees with what the player wrote down.
+  const ABILITIES = [
+    { key: "str", label: "Síla", skills: [
+      { key: "athletics", label: "Atletika" }
+    ]},
+    { key: "dex", label: "Obratnost", skills: [
+      { key: "acrobatics", label: "Akrobacie" },
+      { key: "sleightOfHand", label: "Čachry" },
+      { key: "stealth", label: "Nenápadnost" }
+    ]},
+    { key: "con", label: "Odolnost", skills: [] },
+    { key: "int", label: "Inteligence", skills: [
+      { key: "hist", label: "Historie" },
+      { key: "arcana", label: "Mystika" },
+      { key: "religion", label: "Náboženství" },
+      { key: "investigation", label: "Pátrání" },
+      { key: "nature", label: "Příroda" }
+    ]},
+    { key: "wis", label: "Moudrost", skills: [
+      { key: "medicine", label: "Lékařství" },
+      { key: "animalHandling", label: "Ovládání zvířat" },
+      { key: "survival", label: "Přežití" },
+      { key: "insight", label: "Vhled" },
+      { key: "perception", label: "Vnímání" }
+    ]},
+    { key: "cha", label: "Charisma", skills: [
+      { key: "deception", label: "Klamání" },
+      { key: "persuasion", label: "Přesvědčování" },
+      { key: "performance", label: "Umění" },
+      { key: "intimidation", label: "Zastrašování" }
+    ]}
+  ];
+
+  const SHEET_SECTIONS = [
+    { id: "basic", icon: "🪪", title: "Základní informace", open: true, fields: [
+      { key: "charName", label: "Jméno postavy" },
+      { key: "classLevel", label: "Povolání a úroveň" },
+      { key: "background", label: "Zázemí" },
+      { key: "playerName", label: "Jméno hráče" },
+      { key: "race", label: "Rasa" },
+      { key: "alignment", label: "Přesvědčení" },
+      { key: "xp", label: "Body zkušenosti" },
+      { key: "profBonus", label: "Zdatnostní bonus" },
+      { key: "inspiration", label: "Inspirace" }
+    ]},
+    { id: "combat", icon: "⚔️", title: "Boj a životy", fields: [
+      { key: "ac", label: "OČ (obranné číslo)" },
+      { key: "initiative", label: "Iniciativa" },
+      { key: "speed", label: "Rychlost" },
+      { key: "maxHp", label: "Maximum životů" },
+      { key: "currentHp", label: "Aktuální životy" },
+      { key: "tempHp", label: "Dočasné životy" },
+      { key: "hitDice", label: "Kostky života" },
+      { key: "deathSuccess", label: "Záchrany př. smrtí — úspěchy" },
+      { key: "deathFail", label: "Záchrany př. smrtí — neúspěchy" }
+    ]},
+    { id: "abilities", icon: "📊", title: "Vlastnosti, záchrany a dovednosti", abilities: true },
+    { id: "attacks", icon: "🗡️", title: "Útoky a kouzla", fields: [
+      { key: "attacks", label: "Útoky a kouzla", type: "textarea", rows: 7,
+        placeholder: "Např. Dlouhý meč — +5 — 1k8+3 sečné (jeden útok na řádek)" }
+    ]},
+    { id: "personality", icon: "🎭", title: "Osobnost postavy", fields: [
+      { key: "traits", label: "Osobnostní rysy", type: "textarea" },
+      { key: "ideals", label: "Ideály", type: "textarea" },
+      { key: "bonds", label: "Pouta", type: "textarea" },
+      { key: "flaws", label: "Vady", type: "textarea" }
+    ]},
+    { id: "features", icon: "🎒", title: "Schopnosti, vybavení a jazyky", fields: [
+      { key: "features", label: "Schopnosti a rysy", type: "textarea" },
+      { key: "otherProf", label: "Ostatní zdatnosti a jazyky", type: "textarea" },
+      { key: "equipment", label: "Vybavení a poznámky", type: "textarea" }
+    ]},
+    { id: "appearance", icon: "🧝", title: "Vzhled a osobní údaje", fields: [
+      { key: "age", label: "Věk" },
+      { key: "height", label: "Výška" },
+      { key: "weight", label: "Váha" },
+      { key: "eyes", label: "Oči" },
+      { key: "skin", label: "Pokožka" },
+      { key: "hair", label: "Vlasy" },
+      { key: "appearance", label: "Vzhled postavy", type: "textarea", wide: true }
+    ]},
+    { id: "backstory", icon: "📜", title: "Příběh postavy", fields: [
+      { key: "backstory", label: "Minulost postavy", type: "textarea" },
+      { key: "allies", label: "Spojenci a organizace", type: "textarea" },
+      { key: "additionalFeatures", label: "Další schopnosti a rysy", type: "textarea" },
+      { key: "treasure", label: "Poklad", type: "textarea" }
+    ]},
+    { id: "spells", icon: "✨", title: "Kouzlení", spellcasting: true }
+  ];
+
+  function escHtml(s) {
+    return String(s).replace(/[&<>"']/g, (c) => (
+      { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]
+    ));
+  }
+
+  function renderField(f) {
+    const wideCls = f.wide ? " wide" : "";
+    const ph = f.placeholder ? ` placeholder="${escHtml(f.placeholder)}"` : "";
+    if (f.type === "textarea") {
+      return `<div class="sheet-field${wideCls}"><label>${f.label}</label>` +
+        `<textarea data-key="${f.key}" rows="${f.rows || 3}"${ph}>${escHtml(sheet[f.key] || "")}</textarea></div>`;
+    }
+    return `<div class="sheet-field${wideCls}"><label>${f.label}</label>` +
+      `<input type="text" data-key="${f.key}" value="${escHtml(sheet[f.key] || "")}"${ph}></div>`;
+  }
+
+  function renderAbilityCard(a) {
+    let rows = `<div class="ab-row">` +
+      `<label class="ab-check"><input type="checkbox" data-key="${a.key}_save_prof" ${sheet[a.key + "_save_prof"] ? "checked" : ""}>` +
+      `<span>Záchranný hod</span></label>` +
+      `<input type="text" data-key="${a.key}_save_val" value="${escHtml(sheet[a.key + "_save_val"] || "")}"></div>`;
+    a.skills.forEach((s) => {
+      const k = "skill_" + s.key;
+      rows += `<div class="ab-row">` +
+        `<label class="ab-check"><input type="checkbox" data-key="${k}_prof" ${sheet[k + "_prof"] ? "checked" : ""}>` +
+        `<span>${s.label}</span></label>` +
+        `<input type="text" data-key="${k}_val" value="${escHtml(sheet[k + "_val"] || "")}"></div>`;
+    });
+    return `<div class="ab-card">` +
+      `<div class="ab-name">${a.label.toUpperCase()}</div>` +
+      `<input type="text" class="ab-score" data-key="${a.key}_score" value="${escHtml(sheet[a.key + "_score"] || "")}" placeholder="—">` +
+      rows +
+      `</div>`;
+  }
+
+  function renderSpellSection() {
+    let html = `<div class="sheet-grid">` +
+      renderField({ key: "spellAbility", label: "Sesílací vlastnost" }) +
+      renderField({ key: "spellSaveDc", label: "SO záchrany kouzel" }) +
+      renderField({ key: "spellAttackBonus", label: "Útočný bonus kouzla" }) +
+      `</div>`;
+    html += `<div class="spell-lvl">` +
+      `<div class="spell-lvl-head"><span class="lvl-badge">0</span><span class="lvl-title">Triky</span></div>` +
+      `<textarea data-key="cantrips" placeholder="Triky, jeden na řádek…">${escHtml(sheet.cantrips || "")}</textarea>` +
+      `</div>`;
+    for (let lvl = 1; lvl <= 9; lvl++) {
+      const totalKey = "spellSlotsTotal" + lvl, usedKey = "spellSlotsUsed" + lvl, listKey = "spells" + lvl;
+      html += `<div class="spell-lvl">` +
+        `<div class="spell-lvl-head">` +
+        `<span class="lvl-badge">${lvl}</span><span class="lvl-title">Kouzla ${lvl}. úrovně</span>` +
+        `<label>Pozic celkem</label><input type="text" data-key="${totalKey}" value="${escHtml(sheet[totalKey] || "")}">` +
+        `<label>Utraceno</label><input type="text" data-key="${usedKey}" value="${escHtml(sheet[usedKey] || "")}">` +
+        `</div>` +
+        `<textarea data-key="${listKey}" placeholder="Známá kouzla, jedno na řádek…">${escHtml(sheet[listKey] || "")}</textarea>` +
+        `</div>`;
+    }
+    return html;
+  }
+
+  function renderSection(sec) {
+    let body;
+    if (sec.abilities) {
+      body = `<div class="ab-grid">${ABILITIES.map(renderAbilityCard).join("")}</div>` +
+        `<div class="sheet-grid">${renderField({ key: "passiveWis", label: "Pasivní moudrost (vnímání)" })}</div>`;
+    } else if (sec.spellcasting) {
+      body = renderSpellSection();
+    } else {
+      body = `<div class="sheet-grid">${sec.fields.map(renderField).join("")}</div>`;
+    }
+    return `<div class="acc-item${sec.open ? " open" : ""}">` +
+      `<button class="acc-head" type="button"><span class="acc-ico">${sec.icon}</span>` +
+      `<span class="acc-title">${sec.title}</span><span class="acc-chev">▶</span></button>` +
+      `<div class="acc-body">${body}</div></div>`;
+  }
+
+  function renderSheetBody() {
+    sheetBody.innerHTML = SHEET_SECTIONS.map(renderSection).join("");
+  }
+
+  function loadSheetData() {
+    try {
+      const parsed = JSON.parse(localStorage.getItem(SHEET_KEY) || "{}");
+      sheet = (parsed && typeof parsed === "object") ? parsed : {};
+    } catch (e) { sheet = {}; }
+  }
+
+  function saveSheetData() {
+    try { localStorage.setItem(SHEET_KEY, JSON.stringify(sheet)); } catch (e) { /* storage unavailable — ignore */ }
+  }
+
+  // Debounce text/textarea saves so fast typing doesn't hammer localStorage;
+  // checkbox toggles are rare, so those save immediately.
+  let sheetSaveTimer = null;
+  function scheduleSaveSheet() {
+    clearTimeout(sheetSaveTimer);
+    sheetSaveTimer = setTimeout(saveSheetData, 250);
+  }
+
+  // Delegated listeners: the form is only rendered once, so this keeps
+  // working even if a field is re-rendered later (e.g. after clearing).
+  sheetBody.addEventListener("input", (e) => {
+    const t = e.target;
+    if (!t.dataset.key || t.type === "checkbox") return;
+    sheet[t.dataset.key] = t.value;
+    scheduleSaveSheet();
+  });
+  sheetBody.addEventListener("change", (e) => {
+    const t = e.target;
+    if (!t.dataset.key || t.type !== "checkbox") return;
+    sheet[t.dataset.key] = t.checked;
+    saveSheetData();
+  });
+  sheetBody.addEventListener("click", (e) => {
+    const head = e.target.closest(".acc-head");
+    if (!head) return;
+    head.parentElement.classList.toggle("open");
+    buzz(6);
+  });
+
+  function openSheet() {
+    sheetScrim.classList.add("open");
+    sheetPanel.classList.add("open");
+    sheetPanel.setAttribute("aria-hidden", "false");
+  }
+  function closeSheet() {
+    sheetScrim.classList.remove("open");
+    sheetPanel.classList.remove("open");
+    sheetPanel.setAttribute("aria-hidden", "true");
+  }
+  document.getElementById("openSheet").addEventListener("click", () => {
+    sheetPanel.classList.contains("open") ? closeSheet() : openSheet();
+  });
+  document.getElementById("closeSheet").addEventListener("click", closeSheet);
+  sheetScrim.addEventListener("click", closeSheet);
+
+  // ---------- Clear the character sheet + confirm dialog ----------
+  document.getElementById("sheetClearBtn").addEventListener("click", () => {
+    sheetClearDialog.showModal();
+  });
+  document.getElementById("cancelSheetClear").addEventListener("click", () => sheetClearDialog.close());
+  document.getElementById("confirmSheetClear").addEventListener("click", () => {
+    sheet = {};
+    saveSheetData();
+    renderSheetBody();
+    sheetClearDialog.close();
+    buzz(15);
+  });
+  sheetClearDialog.addEventListener("click", (e) => {
+    const rect = sheetClearDialog.getBoundingClientRect();
+    const inside = e.clientX >= rect.left && e.clientX <= rect.right &&
+                   e.clientY >= rect.top && e.clientY <= rect.bottom;
+    if (!inside) sheetClearDialog.close();
+  });
+
   // ---------- Init ----------
   loadHistory();
   loadSettings();
   if (history.length) restoreLastRoll(history[0]);
+  loadSheetData();
+  renderSheetBody();
 })();
 </script>
 </body>
