@@ -349,16 +349,62 @@
     margin: 0;
   }
 
-  .clear-selection {
-    background: transparent;
+  /* Advantage / disadvantage segmented toggle (replaces the old re-roll button) */
+  .adv-control {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  /* Inset "track" that visually groups the two segments as one control */
+  .adv-toggle {
+    display: inline-flex;
+    gap: 4px;
+    padding: 4px;
+    background: var(--bg-0);
     border: 1px solid var(--edge);
+    border-radius: 13px;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.45);
+  }
+  .adv-btn {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    white-space: nowrap;
+    border: 1px solid transparent;
+    background: transparent;
     color: var(--text-dim);
     border-radius: 10px;
-    padding: 9px 14px;
+    padding: 10px 22px;
     cursor: pointer;
-    font-size: 0.82rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    line-height: 1;
+    transition: background .15s, color .15s, border-color .15s, box-shadow .2s, transform .1s;
   }
-  .clear-selection:hover { border-color: var(--crimson); color: var(--crimson-bright); }
+  .adv-btn .adv-ico { font-size: 0.95rem; opacity: 0.85; }
+  .adv-btn:hover { color: var(--text); background: var(--face); }
+  .adv-btn:active { transform: scale(0.96); }
+  .adv-btn.adv.active {
+    color: #6ee7a0;
+    border-color: rgba(110,231,160,0.55);
+    background: rgba(110,231,160,0.14);
+    box-shadow: 0 0 16px rgba(110,231,160,0.22);
+  }
+  .adv-btn.adv.active .adv-ico { opacity: 1; }
+  .adv-btn.dis.active {
+    color: var(--crimson-bright);
+    border-color: rgba(209,73,91,0.6);
+    background: rgba(209,73,91,0.16);
+    box-shadow: 0 0 16px rgba(209,73,91,0.22);
+  }
+  .adv-btn.dis.active .adv-ico { opacity: 1; }
+
+  /* Advantage/disadvantage tags in the result banner + history */
+  .result-tag.adv { color: #6ee7a0; }
+  .result-tag.dis { color: var(--crimson-bright); }
 
   /* ---------- Drawer ---------- */
   .overlay {
@@ -686,8 +732,21 @@
     }
     .die { flex: 0 0 140px; }
 
-    /* Controls sit right below the tray, always on screen */
+    /* Controls sit right below the tray, always on screen. The advantage
+       toggle takes its own centred row so its labels always have room. */
     .controls { margin: 18px auto 32px; }
+    .adv-control { flex: 1 1 100%; justify-content: center; }
+
+    /* Drawers DOCK beside the play area instead of covering it, so history
+       or the guide can stay open while you keep rolling. No dimming overlay
+       here — the dice tray stays fully interactive. */
+    .overlay { display: none; }
+    body {
+      transition: padding-left .3s cubic-bezier(.4,0,.2,1),
+                  padding-right .3s cubic-bezier(.4,0,.2,1);
+    }
+    body.dock-left  { padding-left: var(--drawer-w); }
+    body.dock-right { padding-right: var(--drawer-w); }
   }
 
   /* ============ PHONE OPTIMIZATION — single-screen, no-scroll ============ */
@@ -774,7 +833,10 @@
     /* Modifier spans full width like the dice-count row */
     .mod-control { flex: 1 1 100%; }
     .num-input { min-height: 38px; font-size: 1.05rem; }
-    #rollLast { flex: 1 1 100%; padding: 11px; min-height: 44px; font-size: 0.95rem; }
+    /* Advantage toggle spans full width; buttons split it evenly */
+    .adv-control { flex: 1 1 100%; }
+    .adv-toggle { flex: 1 1 auto; }
+    .adv-btn { flex: 1 1 0; min-width: 0; min-height: 44px; padding: 10px 8px; font-size: 0.92rem; }
 
     /* Drawer near full-width */
     .drawer { width: 100%; max-width: 100%; border-left: none; }
@@ -857,7 +919,16 @@
       <input type="number" class="num-input" id="modifier" value="0" step="1" inputmode="numeric" />
       <button id="modPlus" aria-label="Zvýšit modifikátor">+</button>
     </div>
-    <button class="clear-selection" id="rollLast" title="Hodit znovu poslední kostkou">🎲 Hodit znovu</button>
+    <div class="adv-control">
+      <div class="adv-toggle" role="group" aria-label="Výhoda nebo nevýhoda">
+        <button type="button" class="adv-btn adv" id="advBtn" aria-pressed="false" title="Hoď dvakrát, ber vyšší">
+          <span class="adv-ico" aria-hidden="true">▲</span> Výhoda
+        </button>
+        <button type="button" class="adv-btn dis" id="disBtn" aria-pressed="false" title="Hoď dvakrát, ber nižší">
+          <span class="adv-ico" aria-hidden="true">▼</span> Nevýhoda
+        </button>
+      </div>
+    </div>
   </div>
 
   <!-- Drawer -->
@@ -1076,6 +1147,7 @@
 
   let selected = DICE[5]; // default d20
   let quantity = 1;
+  let rollMode = "normal"; // "normal" | "adv" (Výhoda) | "dis" (Nevýhoda)
   let history = [];
 
   // ---------- DOM ----------
@@ -1090,6 +1162,8 @@
   const clearCountEl = document.getElementById("clearCount");
   const clearHistoryBtn = document.getElementById("clearHistory");
   const confirmDialog = document.getElementById("confirmDialog");
+  const advBtn = document.getElementById("advBtn");
+  const disBtn = document.getElementById("disBtn");
 
   // ---------- Build dice tray ----------
   DICE.forEach((die) => {
@@ -1177,16 +1251,35 @@
       if (flicks > 6) clearInterval(flicker);
     }, 70);
 
+    const mode = rollMode;
     setTimeout(() => {
       clearInterval(flicker);
-      const rolls = [];
-      for (let i = 0; i < qty; i++) rolls.push(rand(die.sides));
-      const sum = rolls.reduce((a, b) => a + b, 0);
+
+      const rollSet = () => {
+        const s = [];
+        for (let i = 0; i < qty; i++) s.push(rand(die.sides));
+        return s;
+      };
+
+      let rolls, sum, alt = null; // alt = the discarded set's sum (adv/dis only)
+      if (mode === "adv" || mode === "dis") {
+        // Advantage/disadvantage: roll the pool twice, keep the higher/lower total
+        const a = rollSet(), b = rollSet();
+        const sa = a.reduce((x, y) => x + y, 0);
+        const sb = b.reduce((x, y) => x + y, 0);
+        const keepA = mode === "adv" ? sa >= sb : sa <= sb;
+        rolls = keepA ? a : b;
+        sum = keepA ? sa : sb;
+        alt = keepA ? sb : sa;
+      } else {
+        rolls = rollSet();
+        sum = rolls.reduce((a, b) => a + b, 0);
+      }
       const total = sum + mod;
 
       valueEl.textContent = rolls[rolls.length - 1];
-      showResult(die, rolls, mod, sum, total, qty);
-      recordRoll(die, rolls, mod, total, qty);
+      showResult(die, rolls, mod, sum, total, qty, mode, alt);
+      recordRoll(die, rolls, mod, total, qty, mode, alt);
 
       // haptic on landing — emphatic for crits
       const crit = critClass(die, rolls, qty);
@@ -1211,7 +1304,8 @@
     return s;
   }
 
-  function showResult(die, rolls, mod, sum, total, qty) {
+  function showResult(die, rolls, mod, sum, total, qty, mode, alt) {
+    mode = mode || "normal";
     const crit = critClass(die, rolls, qty);
     resultTotal.textContent = total;
     resultTotal.className = "result-total" + (crit ? " " + crit : "");
@@ -1226,7 +1320,13 @@
     }
 
     let label = notation(die, qty, mod);
-    if (qty > 1 || mod !== 0) {
+    if (mode === "adv" || mode === "dis") {
+      // Show which two totals were compared and which one was kept
+      const modeName = mode === "adv" ? "Výhoda" : "Nevýhoda";
+      label += `  →  ${modeName} [${sum} vs ${alt}]`;
+      if (mod !== 0) label += ` ${mod > 0 ? "+" : "−"} ${Math.abs(mod)}`;
+      label += ` = ${total}`;
+    } else if (qty > 1 || mod !== 0) {
       label += `  →  [${rolls.join(", ")}]`;
       if (mod !== 0) label += ` ${mod > 0 ? "+" : "−"} ${Math.abs(mod)}`;
       label += ` = ${total}`;
@@ -1273,7 +1373,7 @@
     return (d || DICE[1]).points; // fallback: d6 square
   }
 
-  function recordRoll(die, rolls, mod, total, qty) {
+  function recordRoll(die, rolls, mod, total, qty, mode, alt) {
     const entry = {
       id: (Date.now().toString(36) + Math.random().toString(36).slice(2, 7)),
       die: die.name,
@@ -1281,6 +1381,8 @@
       rolls: rolls,
       mod: mod,
       total: total,
+      mode: mode || "normal",
+      alt: alt,
       crit: critClass(die, rolls, qty),
       ts: Date.now()
     };
@@ -1310,8 +1412,18 @@
 
     historyList.innerHTML = history.map((h) => {
       const critCls = h.crit ? " " + h.crit : "";
-      let detail = `Hozeno [${h.rolls.join(", ")}]`;
+      const isAdv = h.mode === "adv", isDis = h.mode === "dis";
+      let detail;
+      if (isAdv || isDis) {
+        const kept = h.rolls.reduce((a, b) => a + b, 0);
+        detail = `${isAdv ? "Výhoda" : "Nevýhoda"}: ${kept} vs ${h.alt}`;
+      } else {
+        detail = `Hozeno [${h.rolls.join(", ")}]`;
+      }
       if (h.mod !== 0) detail += ` ${h.mod > 0 ? "+" : "−"} ${Math.abs(h.mod)}`;
+      let modeTag = "";
+      if (isAdv) modeTag = ` <span class="result-tag adv">⬆ Výhoda</span>`;
+      else if (isDis) modeTag = ` <span class="result-tag dis">⬇ Nevýhoda</span>`;
       let tag = "";
       if (h.crit === "crit-hit") tag = " ⚔️ Kritický zásah";
       else if (h.crit === "crit-miss") tag = " 💀 Kritické selhání";
@@ -1322,7 +1434,7 @@
             <svg viewBox="0 0 80 80"><polygon points="${points}" /></svg>
           </div>
           <div class="hist-body">
-            <div class="hist-notation">${h.notation}${tag}</div>
+            <div class="hist-notation">${h.notation}${modeTag}${tag}</div>
             <div class="hist-detail">${detail}</div>
             <div class="hist-time">${formatTime(h.ts)}</div>
           </div>
@@ -1367,10 +1479,17 @@
   modifierInput.addEventListener("input", () => saveSettings());
   modifierInput.addEventListener("change", () => setMod(parseInt(modifierInput.value, 10)));
 
-  document.getElementById("rollLast").addEventListener("click", () => {
-    const el = tray.querySelector(`.die[data-name="${selected.name}"]`);
-    if (el) rollDie(selected, el);
-  });
+  // ---------- Roll mode (advantage / disadvantage) ----------
+  function setRollMode(mode) {
+    rollMode = (mode === "adv" || mode === "dis") ? mode : "normal";
+    advBtn.classList.toggle("active", rollMode === "adv");
+    disBtn.classList.toggle("active", rollMode === "dis");
+    advBtn.setAttribute("aria-pressed", rollMode === "adv");
+    disBtn.setAttribute("aria-pressed", rollMode === "dis");
+    saveSettings();
+  }
+  advBtn.addEventListener("click", () => { setRollMode(rollMode === "adv" ? "normal" : "adv"); buzz(8); });
+  disBtn.addEventListener("click", () => { setRollMode(rollMode === "dis" ? "normal" : "dis"); buzz(8); });
 
   // ---------- Drawer ----------
   const overlay = document.getElementById("overlay");
@@ -1380,35 +1499,45 @@
   function openDrawer() {
     closeGuide();
     drawer.classList.add("open");
-    overlay.classList.add("open");
     drawer.setAttribute("aria-hidden", "false");
+    syncChrome();
   }
   function closeDrawer() {
     drawer.classList.remove("open");
     drawer.setAttribute("aria-hidden", "true");
-    syncOverlay();
+    syncChrome();
   }
   function openGuide() {
     closeDrawer();
     guideDrawer.classList.add("open");
-    overlay.classList.add("open");
     guideDrawer.setAttribute("aria-hidden", "false");
+    syncChrome();
   }
   function closeGuide() {
     guideDrawer.classList.remove("open");
     guideDrawer.setAttribute("aria-hidden", "true");
-    syncOverlay();
+    syncChrome();
   }
-  // Overlay stays visible while EITHER drawer is open
-  function syncOverlay() {
-    const anyOpen = drawer.classList.contains("open") || guideDrawer.classList.contains("open");
-    overlay.classList.toggle("open", anyOpen);
+  // Keep the overlay (mobile) and the docked-layout classes (laptop) in sync.
+  // On laptops an open drawer docks beside the content instead of covering it,
+  // so you can keep history/guide open while rolling.
+  function syncChrome() {
+    const histOpen = drawer.classList.contains("open");
+    const guideOpen = guideDrawer.classList.contains("open");
+    overlay.classList.toggle("open", histOpen || guideOpen);
+    document.body.classList.toggle("dock-right", histOpen);
+    document.body.classList.toggle("dock-left", guideOpen);
   }
   function closeAllDrawers() { closeDrawer(); closeGuide(); }
 
-  document.getElementById("openDrawer").addEventListener("click", openDrawer);
+  // Header buttons toggle their drawer (so they can also close it while docked)
+  document.getElementById("openDrawer").addEventListener("click", () => {
+    drawer.classList.contains("open") ? closeDrawer() : openDrawer();
+  });
   document.getElementById("closeDrawer").addEventListener("click", closeDrawer);
-  document.getElementById("openGuide").addEventListener("click", openGuide);
+  document.getElementById("openGuide").addEventListener("click", () => {
+    guideDrawer.classList.contains("open") ? closeGuide() : openGuide();
+  });
   document.getElementById("closeGuide").addEventListener("click", closeGuide);
   overlay.addEventListener("click", closeAllDrawers);
 
@@ -1483,7 +1612,8 @@
     try {
       localStorage.setItem(SETTINGS_KEY, JSON.stringify({
         qty: quantity,
-        mod: parseInt(modifierInput.value, 10) || 0
+        mod: parseInt(modifierInput.value, 10) || 0,
+        mode: rollMode
       }));
     } catch (e) { /* storage unavailable — ignore */ }
   }
@@ -1492,6 +1622,7 @@
     try { s = JSON.parse(localStorage.getItem(SETTINGS_KEY) || "{}") || {}; } catch (e) { s = {}; }
     setQty(typeof s.qty === "number" ? s.qty : 1);
     setMod(typeof s.mod === "number" ? s.mod : 0);
+    setRollMode(s.mode);
   }
 
   // ---------- Restore the last roll's result banner on load ----------
@@ -1520,7 +1651,7 @@
       if (valEl) valEl.textContent = rolls[rolls.length - 1];
     }
     showResultDie(die, qty);
-    showResult(die, rolls, mod, total - mod, total, qty);
+    showResult(die, rolls, mod, total - mod, total, qty, h.mode, h.alt);
   }
 
   // ---------- Init ----------
