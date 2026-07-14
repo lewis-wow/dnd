@@ -65,9 +65,10 @@
   /* ---------- Header ---------- */
   header {
     text-align: center;
-    padding: 28px 16px 10px;
+    padding: 22px 22px 10px;
     position: relative;
   }
+  .header-titles { min-width: 0; }
   header h1 {
     margin: 0;
     font-size: clamp(1.8rem, 5vw, 2.8rem);
@@ -87,14 +88,19 @@
     text-transform: uppercase;
   }
 
-  .header-actions {
+  /* Guide button lives on the LEFT (it opens a left-docking drawer),
+     history stays on the RIGHT — this keeps the title centred between
+     them with no overlap, at any width, with no need to resize it. */
+  .header-actions-left, .header-actions-right {
     position: absolute;
-    top: 24px;
-    right: 20px;
+    top: 22px;
     display: flex;
     gap: 10px;
+    z-index: 2;
   }
-  .header-actions button {
+  .header-actions-left { left: 22px; }
+  .header-actions-right { right: 22px; }
+  .header-actions-left button, .header-actions-right button {
     background: var(--bg-2);
     border: 1px solid var(--edge);
     color: var(--gold);
@@ -108,8 +114,8 @@
     gap: 8px;
     transition: background 0.2s, transform 0.1s, border-color 0.2s;
   }
-  .header-actions button:hover { background: var(--face-lit); border-color: var(--gold); }
-  .header-actions button:active { transform: scale(0.95); }
+  .header-actions-left button:hover, .header-actions-right button:hover { background: var(--face-lit); border-color: var(--gold); }
+  .header-actions-left button:active, .header-actions-right button:active { transform: scale(0.95); }
   .history-btn .count {
     background: var(--crimson);
     color: #fff;
@@ -747,6 +753,13 @@
     }
     body.dock-left  { padding-left: var(--drawer-w); }
     body.dock-right { padding-right: var(--drawer-w); }
+
+    /* A docked drawer narrows the header strip. The guide button sits on the
+       left (next to the drawer it opens) and history on the right, so the
+       title stays centred between them at its normal size, never resized —
+       only compact the button labels to icons if room gets tight. */
+    body.dock-left  .header-actions-left .btn-text,
+    body.dock-right .header-actions-right .btn-text { display: none; }
   }
 
   /* ============ PHONE OPTIMIZATION — single-screen, no-scroll ============ */
@@ -757,25 +770,21 @@
 
     header {
       flex: 0 0 auto;
-      padding: 12px 14px 4px;
-      display: grid;
-      grid-template-columns: 1fr auto;
-      grid-template-areas: "title btn" "sub sub";
+      padding: 12px 14px 6px;
+      display: flex;
       align-items: center;
-      gap: 2px 8px;
-      text-align: left;
+      gap: 8px;
     }
-    header h1 { grid-area: title; font-size: 1.4rem; letter-spacing: 1.5px; }
-    header p { grid-area: sub; font-size: 0.66rem; letter-spacing: 2.5px; }
+    /* Phones only have room for the title + one action row; the guide
+       button collapses back next to history on the right here. */
+    .header-actions-left { position: static; order: 3; }
+    .header-actions-right { position: static; order: 3; }
+    .header-titles { flex: 1 1 auto; min-width: 0; text-align: left; order: 1; }
+    header h1 { font-size: 1.4rem; letter-spacing: 1.5px; }
+    header p { font-size: 0.66rem; letter-spacing: 2.5px; }
 
-    /* Action buttons: static, compact, tappable */
-    .header-actions {
-      grid-area: btn;
-      position: static;
-      top: auto; right: auto;
-      gap: 6px;
-    }
-    .header-actions button {
+    /* Action buttons: compact, tappable */
+    .header-actions-left button, .header-actions-right button {
       padding: 9px 11px;
       min-height: 42px;
       font-size: 0.8rem;
@@ -884,12 +893,16 @@
   </svg>
 
   <header>
-    <h1>Kostky Říše</h1>
-    <p>Dungeons &amp; Dragons</p>
-    <div class="header-actions">
+    <div class="header-actions-left">
       <button class="guide-btn" id="openGuide" aria-label="Otevřít příručku">
         📖 <span class="btn-text">Příručka</span>
       </button>
+    </div>
+    <div class="header-titles">
+      <h1>Kostky Říše</h1>
+      <p>Dungeons &amp; Dragons</p>
+    </div>
+    <div class="header-actions-right">
       <button class="history-btn" id="openDrawer" aria-label="Otevřít historii">
         📜 <span class="btn-text">Historie</span> <span class="count" id="histCount">0</span>
       </button>
@@ -1497,7 +1510,6 @@
   const guideDrawer = document.getElementById("guideDrawer");
 
   function openDrawer() {
-    closeGuide();
     drawer.classList.add("open");
     drawer.setAttribute("aria-hidden", "false");
     syncChrome();
@@ -1508,7 +1520,6 @@
     syncChrome();
   }
   function openGuide() {
-    closeDrawer();
     guideDrawer.classList.add("open");
     guideDrawer.setAttribute("aria-hidden", "false");
     syncChrome();
