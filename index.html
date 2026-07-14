@@ -807,6 +807,9 @@
   .drawer-foot {
     padding: 16px;
     border-top: 1px solid var(--edge);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
   }
   .clear-history-btn {
     width: 100%;
@@ -822,6 +825,22 @@
   }
   .clear-history-btn:hover:not(:disabled) { background: rgba(160,44,58,0.15); }
   .clear-history-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* More severe than "clear history" (wipes everything — sheet, layout,
+     the lot), so it's visually a step down: dimmer, smaller, until hovered. */
+  .wipe-all-btn {
+    width: 100%;
+    background: transparent;
+    border: 1px dashed var(--edge);
+    color: var(--text-dim);
+    padding: 10px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 0.78rem;
+    letter-spacing: 0.5px;
+    transition: background 0.2s, border-color 0.2s, color 0.2s;
+  }
+  .wipe-all-btn:hover { background: rgba(160,44,58,0.15); border-color: var(--crimson); color: var(--crimson-bright); }
 
   /* ---------- Confirm dialog ---------- */
   dialog {
@@ -913,6 +932,18 @@
     gap: 10px;
     flex: 1 1 0;
     min-width: 0;
+    /* Without this, a column emptied out by dragging every section out of
+       it collapses to 0 height — nothing left for elementFromPoint to hit,
+       so there's no way to drag anything back into it. Keeps it a real,
+       hoverable drop target even with nothing inside. */
+    min-height: 60px;
+  }
+  /* :empty is live — updates the instant a drag empties/fills a column,
+     not just after the next full re-render — so this doubles as a visible
+     "yes, you can drop here" cue while dragging. */
+  .sheet-col:empty {
+    border: 1px dashed var(--edge);
+    border-radius: 12px;
   }
 
   /* Sections are always fully expanded — everything is on screen without
@@ -1794,6 +1825,7 @@
     <div class="history-list" id="historyList"></div>
     <div class="drawer-foot">
       <button class="clear-history-btn" id="clearHistory">🗑 Smazat historii</button>
+      <button class="wipe-all-btn" id="wipeAllBtn">🧨 Smazat všechna data aplikace</button>
     </div>
   </aside>
 
@@ -1809,6 +1841,16 @@
     </div>
   </dialog>
 
+  <dialog id="wipeAllDialog">
+    <div class="dialog-body">
+      <h3>Smazat všechna data aplikace?</h3>
+      <p>Tímto trvale odstraníš historii hodů, celý deník postavy i uložené rozložení panelů. Tuto akci nelze vrátit zpět.</p>
+    </div>
+    <div class="dialog-actions">
+      <button class="btn-cancel" id="cancelWipeAll">Zrušit</button>
+      <button class="btn-danger" id="confirmWipeAll">Smazat vše</button>
+    </div>
+  </dialog>
 
 <script>
 (function () {
@@ -2366,6 +2408,50 @@
     const inside = e.clientX >= rect.left && e.clientX <= rect.right &&
                    e.clientY >= rect.top && e.clientY <= rect.bottom;
     if (!inside) confirmDialog.close();
+  });
+
+  // ---------- Wipe every bit of this app's own localStorage data ----------
+  // Every key any part of the app persists under — history, sheet
+  // contents/order/scroll, and the resizable panes' saved widths. Listed
+  // explicitly (not derived from a prefix scan) so it can never touch
+  // anything else that happens to share localStorage with this page.
+  const wipeAllDialog = document.getElementById("wipeAllDialog");
+  document.getElementById("wipeAllBtn").addEventListener("click", () => wipeAllDialog.showModal());
+  document.getElementById("cancelWipeAll").addEventListener("click", () => wipeAllDialog.close());
+  document.getElementById("confirmWipeAll").addEventListener("click", () => {
+    [STORAGE_KEY, SETTINGS_KEY, SHEET_KEY, SHEET_ORDER_KEY, SHEET_SCROLL_KEY, PANE_WIDTH_KEY, GUIDE_WIDTH_KEY]
+      .forEach((k) => { try { localStorage.removeItem(k); } catch (e) { /* ignore */ } });
+
+    // Reset every bit of in-memory state + the UI back to a fresh-load look.
+    history = [];
+    sheet = {};
+    renderHistory();
+    loadSettings();
+    resultTotal.textContent = "—";
+    resultTotal.className = "result-total";
+    resultLabel.textContent = "Vyber si kostku a nech rozhodnout osud";
+    resultDie.classList.remove("show", "crit-hit", "crit-miss");
+    resultDie.innerHTML = "";
+    tray.querySelectorAll(".die").forEach((d) => d.classList.remove("active", "crit-hit", "crit-miss"));
+    dicePane.style.flexBasis = "";
+    dicePane.style.width = "";
+    guidePane.style.flexBasis = "";
+    guidePane.style.width = "";
+    applyPaneWidthForViewport();
+    applyGuideWidthForViewport();
+    sheetPane.scrollTop = 0;
+    sheetColCount = computeSheetColCount();
+    renderSheetBody();
+    updateVitals();
+
+    wipeAllDialog.close();
+    buzz(20);
+  });
+  wipeAllDialog.addEventListener("click", (e) => {
+    const rect = wipeAllDialog.getBoundingClientRect();
+    const inside = e.clientX >= rect.left && e.clientX <= rect.right &&
+                   e.clientY >= rect.top && e.clientY <= rect.bottom;
+    if (!inside) wipeAllDialog.close();
   });
 
   // Keyboard: Esc closes the history drawer / collapses the guide pane
