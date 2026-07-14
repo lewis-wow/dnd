@@ -508,6 +508,116 @@
   .result-tag.adv { color: #6ee7a0; }
   .result-tag.dis { color: var(--crimson-bright); }
 
+  /* ---------- Dice group: tap a tray die to add it, roll them all at once ----------
+     Clicking a die tile no longer rolls it immediately — it adds one to a
+     group (e.g. tap d6 three times + d20 once = 2×d6 + 1×d20), shown as a
+     small badge on the tile itself. The − button in the same corner takes
+     one back out. One shared button below rolls the whole group together
+     and zeroes every counter again. */
+  .die.in-group { border-color: var(--gold); }
+  .die.in-group .die-name { color: var(--gold-bright); }
+  .die-qty {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    background: var(--bg-0);
+    border: 1px solid var(--gold);
+    border-radius: 20px;
+    padding: 2px 6px 2px 2px;
+    opacity: 0;
+    transform: scale(0.85);
+    pointer-events: none;
+    transition: opacity .15s, transform .15s;
+  }
+  .die.in-group .die-qty {
+    opacity: 1;
+    transform: scale(1);
+    pointer-events: auto;
+  }
+  .die-qty-minus {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: none;
+    background: var(--face);
+    color: var(--gold);
+    font-size: 0.8rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .die-qty-minus:hover { background: var(--face-lit); }
+  .die-qty-minus:active { transform: scale(0.88); }
+  .die-qty-count {
+    min-width: 12px;
+    text-align: center;
+    font-weight: 800;
+    font-size: 0.72rem;
+    color: var(--gold-bright);
+  }
+
+  /* Roll button + Výhoda/Nevýhoda share one row, right next to each other —
+     rolling the group and rolling with advantage/disadvantage are the two
+     ways a roll actually happens, so they read as one unit. An even 50/50
+     split doesn't leave the two-segment toggle enough room for "Nevýhoda"
+     (its longest label), so the roll button only claims what its own short
+     label needs and the toggle gets the rest; wrap is a safety net for
+     anything narrower than that. */
+  .roll-row {
+    display: flex;
+    flex-wrap: wrap;
+    flex: 1 1 100%;
+    gap: 8px;
+    align-items: stretch;
+  }
+  .roll-row .adv-control { flex: 1 1 220px; min-width: 0; }
+  /* Tighter than the toggle's old solo-row padding — it now shares the row
+     with the roll button instead of spanning the full width by itself. */
+  .roll-row .adv-btn { padding: 9px 12px; gap: 5px; font-size: 0.86rem; }
+  .group-roll-btn {
+    flex: 0 1 auto;
+    min-width: 0;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border-radius: 12px;
+    border: 1px solid var(--gold);
+    background: rgba(217,180,90,0.12);
+    color: var(--gold-bright);
+    font-weight: 700;
+    letter-spacing: 1px;
+    font-size: 0.92rem;
+    cursor: pointer;
+    transition: background .15s, transform .1s;
+  }
+  .group-roll-btn:hover:not(:disabled) { background: rgba(217,180,90,0.22); }
+  .group-roll-btn:active:not(:disabled) { transform: scale(0.98); }
+  .group-roll-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* Multi-line text badge shown in the result banner for a group roll,
+     replacing the single die polygon (there's no one shape to show). */
+  .rd-pool-label {
+    font-size: 0.78rem;
+    line-height: 1.35;
+    padding: 0 6px;
+    text-align: center;
+  }
+  .hist-shape-pool {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+  }
+
   /* ---------- Drawer ---------- */
   .overlay {
     position: fixed;
@@ -1073,6 +1183,19 @@
     padding: 12px 14px 14px;
   }
   .ab-card .ab-name { color: var(--gold-bright); font-weight: 700; letter-spacing: 1px; font-size: 0.85rem; margin-bottom: 8px; }
+  /* Base score + equipment/item bonus side by side — the two numbers that
+     together make up the effective score the modifier is computed from
+     (e.g. base 15 + gauntlets +2 = 17). */
+  .ab-score-row { display: flex; gap: 8px; margin-bottom: 6px; }
+  .ab-score-field { flex: 1 1 auto; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .ab-score-field label {
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 0.6rem;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .ab-score-item-field { flex: 0 0 66px; }
   .ab-card .ab-score {
     width: 100%;
     text-align: center;
@@ -1083,10 +1206,32 @@
     border-radius: 8px;
     color: var(--text);
     padding: 8px;
-    margin-bottom: 10px;
     font-family: inherit;
   }
   .ab-card .ab-score:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 2px rgba(217,180,90,0.2); }
+  .ab-score-item {
+    width: 100%;
+    text-align: center;
+    font-size: 1.05rem;
+    font-weight: 700;
+    background: var(--face);
+    border: 1px solid var(--edge);
+    border-radius: 8px;
+    color: var(--gold-bright);
+    padding: 8px 2px;
+    font-family: inherit;
+  }
+  .ab-score-item:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 2px rgba(217,180,90,0.2); }
+  /* Read-only computed readout — never typed into directly, always derived
+     from score + item bonus, so it can never drift out of sync with them. */
+  .ab-mod-readout {
+    text-align: center;
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+  }
+  .ab-mod-readout strong { color: var(--gold-bright); font-size: 0.98rem; }
+  .ab-mod-detail { font-size: 0.68rem; }
   .ab-row {
     display: flex;
     align-items: center;
@@ -1108,7 +1253,7 @@
   .ab-row input[type="checkbox"] { accent-color: var(--gold); width: 15px; height: 15px; flex: 0 0 auto; cursor: pointer; }
   .ab-row .ab-check span { flex: 1 1 auto; font-size: 0.8rem; color: var(--text); min-width: 0; }
   .ab-row input[type="text"] {
-    width: 44px;
+    width: 40px;
     flex: 0 0 auto;
     text-align: center;
     background: var(--face);
@@ -1120,6 +1265,36 @@
     font-family: inherit;
   }
   .ab-row input[type="text"]:focus { outline: none; border-color: var(--gold); }
+  /* Auto-computed total (ability mod + proficiency + misc) — read-only. */
+  .ab-row-total {
+    flex: 0 0 auto;
+    min-width: 32px;
+    text-align: center;
+    font-weight: 800;
+    font-size: 0.88rem;
+    color: var(--gold-bright);
+  }
+  .ab-roll-btn {
+    flex: 0 0 auto;
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+    border: 1px solid var(--edge);
+    background: var(--face);
+    color: var(--gold);
+    font-size: 0.9rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .ab-roll-btn:hover { background: var(--face-lit); border-color: var(--gold); }
+  .ab-roll-btn:active { transform: scale(0.9); }
+  /* Tag shown in the result banner when a roll was triggered from a
+     skill/save row on the sheet, e.g. "Atletika — 1k20 + 5 = 18". */
+  .result-skill-tag { color: var(--gold-bright); font-weight: 700; margin-right: 6px; }
 
   /* Spellcasting level cards */
   .spell-lvl {
@@ -1375,6 +1550,8 @@
 
     .controls { margin: 10px auto 16px; gap: 8px; }
     .qty-control, .mod-control { padding: 6px 10px; }
+    .group-roll-btn { padding: 6px 10px; font-size: 0.85rem; }
+    .roll-row .adv-btn { padding: 7px 9px; font-size: 0.8rem; }
     .guide-pane-head, .dice-pane-head, .sheet-head { padding: 10px 16px; }
     .guide-pane-head h2, .dice-pane-head h2, .sheet-head h2 { font-size: 0.98rem; }
   }
@@ -1446,6 +1623,9 @@
     .die-shape { width: clamp(38px, 12vw, 50px); height: clamp(38px, 12vw, 50px); }
     .die-shape .die-value { font-size: 1.05rem; }
     .die-range { font-size: 0.6rem; }
+    .die-qty { top: 3px; right: 3px; padding: 1px 5px 1px 1px; }
+    .die-qty-minus { width: 15px; height: 15px; font-size: 0.7rem; }
+    .die-qty-count { font-size: 0.66rem; }
     .die:active { transform: scale(0.94); border-color: var(--gold); }
     .die.active:active { border-color: var(--gold); }
 
@@ -1465,10 +1645,10 @@
     /* Modifier spans full width like the dice-count row */
     .mod-control { flex: 1 1 100%; }
     .num-input { min-height: 38px; font-size: 1.05rem; }
-    /* Advantage toggle spans full width; buttons split it evenly (the
-       flex:1 1 auto/1 1 0 stretch itself is already universal, in base) */
-    .adv-control { flex: 1 1 100%; }
-    .adv-btn { min-height: 44px; padding: 10px 8px; font-size: 0.92rem; }
+    /* Roll button + Výhoda/Nevýhoda still share one row (see .roll-row) —
+       just taller touch targets and tighter padding at phone width. */
+    .roll-row .adv-btn { min-height: 44px; padding: 8px 6px; font-size: 0.86rem; }
+    .group-roll-btn { min-height: 44px; font-size: 0.95rem; }
 
     /* Drawer near full-width */
     .drawer { width: 100%; max-width: 100%; border-left: none; }
@@ -1628,9 +1808,12 @@
             <li><strong>d100</strong> (d10 × 2) — procenta a náhodné tabulky</li>
           </ul>
           <p><strong>Zápis hodů:</strong> <em>2d6 + 3</em> znamená „hoď dvěma šestistěnnými kostkami
-          a přičti 3“. To zadáš pomocí <strong>Počtu kostek</strong> a <strong>Modifikátoru</strong> v aplikaci.</p>
+          a přičti 3“. V appce si kostky do skupiny přidáš klepnutím na dlaždici (klepni na d6 dvakrát,
+          malý − v rohu ubere), zadáš <strong>Modifikátor</strong> a stiskneš <strong>Hodit</strong> —
+          klidně i s namíchanými typy kostek najednou (např. d4 + d6 + d20).</p>
           <p><strong>Výhoda / Nevýhoda:</strong> při výhodě hodíš 2× d20 a bereš <strong>vyšší</strong>
-          číslo, při nevýhodě <strong>nižší</strong>. (V appce: nastav počet kostek na 2 u d20 a použij vyšší/nižší.)</p>
+          číslo, při nevýhodě <strong>nižší</strong>. (V appce: tlačítka <strong>Výhoda</strong>/<strong>Nevýhoda</strong>
+          hned vedle Hodit to udělají za tebe jedním klepnutím.)</p>
           <p><strong>Kritický zásah / selhání:</strong> přirozená <strong>20</strong> na d20 je kritický
           úspěch, přirozená <strong>1</strong> je kritické selhání — appka je zvýrazní zeleně a červeně.</p>
         </div>
@@ -1653,8 +1836,8 @@
           </ul>
 
           <p><strong>Výhoda a nevýhoda:</strong> hodíš <em>dvěma</em> k20 — s výhodou bereš
-          <strong>vyšší</strong>, s nevýhodou <strong>nižší</strong>. (V appce: nastav 2 kostky u d20.)
-          Výhoda a nevýhoda se navzájem ruší na běžný hod.</p>
+          <strong>vyšší</strong>, s nevýhodou <strong>nižší</strong>. (V appce: tlačítka Výhoda/Nevýhoda
+          vedle Hodit.) Výhoda a nevýhoda se navzájem ruší na běžný hod.</p>
 
           <p><strong>Souboj po kolech:</strong> na začátku každý hodí <em>iniciativu</em>
           (1k20 + Obratnost) a určí se pořadí. Ve svém <strong>tahu</strong> můžeš:</p>
@@ -1733,13 +1916,20 @@
         <button class="acc-head"><span class="acc-ico">📊</span><span class="acc-title">Vlastnosti postavy</span><span class="acc-chev">▶</span></button>
         <div class="acc-body">
           <p>Každou postavu určuje šest vlastností. Z hodnoty se počítá <strong>modifikátor</strong>
-          (10–11 = 0, každé +2 body = +1), který přičítáš k hodům d20.</p>
-          <div class="entry"><div class="e-name">Síla (STR)</div><div class="e-desc">Fyzická moc — boj na blízko, zvedání, šplhání, tlačení.</div></div>
-          <div class="entry"><div class="e-name">Obratnost (DEX)</div><div class="e-desc">Rychlost a mrštnost — útoky na dálku, plížení, iniciativa, obrana.</div></div>
-          <div class="entry"><div class="e-name">Odolnost (CON)</div><div class="e-desc">Výdrž a zdraví — počet životů a odolnost proti vyčerpání a jedu.</div></div>
-          <div class="entry"><div class="e-name">Inteligence (INT)</div><div class="e-desc">Znalosti a logika — magie kouzelníků, pátrání, vědomosti.</div></div>
-          <div class="entry"><div class="e-name">Moudrost (WIS)</div><div class="e-desc">Vnímavost a intuice — všímavost, přežití, magie kleriků a druidů.</div></div>
-          <div class="entry"><div class="e-name">Charisma (CHA)</div><div class="e-desc">Osobnost a vůle — přesvědčování, klamání, magie bardů a čarodějů.</div></div>
+          (10–11 = 0, každé +2 body = +1), který přičítáš k hodům d20. V Deníku postavy na to má
+          každá vlastnost sekci <strong>„Vlastnosti, záchrany a dovednosti“</strong> — zapíšeš tam
+          <strong>Základ</strong> (co ti vyšlo při tvorbě postavy) a volitelně <strong>Vybavení</strong>
+          (bonus od kouzelného předmětu, např. rukavice síly +2). Appka si sama sečte efektivní skóre
+          i modifikátor a zobrazí je (zkratky ve žlutém pruhu nahoře odpovídají zkratkám v Deníku).</p>
+          <div class="entry"><div class="e-name">Síla (SÍL)</div><div class="e-desc">Fyzická moc — boj na blízko, zvedání, šplhání, tlačení. Dovednost: <em>Atletika</em>.</div></div>
+          <div class="entry"><div class="e-name">Obratnost (OBR)</div><div class="e-desc">Rychlost a mrštnost — útoky na dálku, plížení, iniciativa, obrana. Dovednosti: <em>Akrobacie, Čachry, Nenápadnost</em>.</div></div>
+          <div class="entry"><div class="e-name">Odolnost (ODO)</div><div class="e-desc">Výdrž a zdraví — počet životů a odolnost proti vyčerpání a jedu. Bez vlastních dovedností.</div></div>
+          <div class="entry"><div class="e-name">Inteligence (INT)</div><div class="e-desc">Znalosti a logika — magie kouzelníků, pátrání, vědomosti. Dovednosti: <em>Historie, Mystika, Náboženství, Pátrání, Příroda</em>.</div></div>
+          <div class="entry"><div class="e-name">Moudrost (MDR)</div><div class="e-desc">Vnímavost a intuice — všímavost, přežití, magie kleriků a druidů. Dovednosti: <em>Lékařství, Ovládání zvířat, Přežití, Vhled, Vnímání</em>.</div></div>
+          <div class="entry"><div class="e-name">Charisma (CHA)</div><div class="e-desc">Osobnost a vůle — přesvědčování, klamání, magie bardů a čarodějů. Dovednosti: <em>Klamání, Přesvědčování, Umění, Zastrašování</em>.</div></div>
+          <p class="muted">U každého záchranného hodu a dovednosti v Deníku appka sama sečte modifikátor +
+          zdatnostní bonus (jen když je zaškrtnutý jako zdatný) + tvůj volitelný vlastní bonus, a rovnou
+          vedle je tlačítko 🎲, které s tímto součtem hned hodí.</p>
         </div>
       </div>
 
@@ -1770,33 +1960,36 @@
         <div class="result-stage">
           <div class="result-die" id="resultDie" aria-hidden="true"></div>
           <div class="result-total" id="resultTotal">—</div>
-          <div class="result-label" id="resultLabel">Vyber si kostku a nech rozhodnout osud</div>
+          <div class="result-label" id="resultLabel">Přidej kostky do skupiny a hoď</div>
         </div>
 
         <div class="tray" id="tray"></div>
       </main>
 
       <div class="controls">
-        <div class="qty-control">
-          <label>Počet kostek</label>
-          <button id="qtyMinus" aria-label="Ubrat kostku">−</button>
-          <input type="number" class="num-input" id="qtyVal" value="1" min="1" max="20" step="1" inputmode="numeric" />
-          <button id="qtyPlus" aria-label="Přidat kostku">+</button>
-        </div>
         <div class="qty-control mod-control">
           <label>Modifikátor</label>
           <button id="modMinus" aria-label="Snížit modifikátor">−</button>
           <input type="number" class="num-input" id="modifier" value="0" step="1" inputmode="numeric" />
           <button id="modPlus" aria-label="Zvýšit modifikátor">+</button>
         </div>
-        <div class="adv-control">
-          <div class="adv-toggle" role="group" aria-label="Výhoda nebo nevýhoda">
-            <button type="button" class="adv-btn adv" id="advBtn" aria-pressed="false" title="Hoď dvakrát, ber vyšší">
-              <span class="adv-ico" aria-hidden="true">▲</span> Výhoda
-            </button>
-            <button type="button" class="adv-btn dis" id="disBtn" aria-pressed="false" title="Hoď dvakrát, ber nižší">
-              <span class="adv-ico" aria-hidden="true">▼</span> Nevýhoda
-            </button>
+        <!-- Rolling the group and rolling with advantage/disadvantage are
+             the two ways a roll happens, so they sit right next to each
+             other. Click a die tile above to add it to the group first
+             (its own little counter badge tracks how many); this button
+             rolls everything currently in the group at once, then zeroes
+             every counter. -->
+        <div class="roll-row">
+          <button type="button" class="group-roll-btn" id="poolRollBtn" disabled title="Hodí všechny kostky přidané do skupiny">🎲 Hodit</button>
+          <div class="adv-control">
+            <div class="adv-toggle" role="group" aria-label="Výhoda nebo nevýhoda">
+              <button type="button" class="adv-btn adv" id="advBtn" title="Hoď hned 2×k20, použij vyšší">
+                <span class="adv-ico" aria-hidden="true">▲</span> Výhoda
+              </button>
+              <button type="button" class="adv-btn dis" id="disBtn" title="Hoď hned 2×k20, použij nižší">
+                <span class="adv-ico" aria-hidden="true">▼</span> Nevýhoda
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -1873,8 +2066,10 @@
   ];
 
   let selected = DICE[5]; // default d20
-  let quantity = 1;
-  let rollMode = "normal"; // "normal" | "adv" (Výhoda) | "dis" (Nevýhoda)
+  // Set right before a d20 roll triggered from a skill/save row on the
+  // sheet, so the very next result can be labelled with which one it was
+  // (e.g. "Atletika") — consumed and cleared the instant that roll lands.
+  let pendingRollTag = null;
   let history = [];
   let sheet = {}; // character sheet field values, keyed by field key
 
@@ -1883,7 +2078,6 @@
   const resultTotal = document.getElementById("resultTotal");
   const resultLabel = document.getElementById("resultLabel");
   const resultDie = document.getElementById("resultDie");
-  const qtyVal = document.getElementById("qtyVal");
   const modifierInput = document.getElementById("modifier");
   const histCountEl = document.getElementById("histCount");
   const historyList = document.getElementById("historyList");
@@ -1892,6 +2086,7 @@
   const confirmDialog = document.getElementById("confirmDialog");
   const advBtn = document.getElementById("advBtn");
   const disBtn = document.getElementById("disBtn");
+  const poolRollBtn = document.getElementById("poolRollBtn");
   const sheetBody = document.getElementById("sheetBody");
   const sheetPane = document.querySelector(".sheet-pane");
   const dicePane = document.querySelector(".dice-pane");
@@ -1940,7 +2135,8 @@
     vitalInsp.classList.toggle("on", inspCount > 0);
     vitalProf.textContent = sheet.profBonus || "—";
     Object.keys(vitalAbil).forEach((key) => {
-      vitalAbil[key].textContent = abilityMod(sheet[key + "_score"]);
+      const total = abilityScoreTotal(key);
+      vitalAbil[key].textContent = total === null ? "—" : abilityMod(total);
     });
   }
 
@@ -1954,12 +2150,24 @@
   window.addEventListener("resize", setChromeHeight);
   window.addEventListener("orientationchange", setChromeHeight);
 
-  // ---------- Build dice tray ----------
+  // ---------- Dice group + tray ----------
+  // Tapping a die tile no longer rolls it right away — it adds one of that
+  // die to a group (e.g. tap d6 three times + d20 once = 2×d6 + 1×d20),
+  // tracked here and mirrored as a small badge on the tile itself. The
+  // shared "Hodit skupinu kostek" button rolls everything in the group at
+  // once, then empties it again.
+  const pool = {}; // die name -> quantity currently in the group
+  DICE.forEach((die) => { pool[die.name] = 0; });
+
   DICE.forEach((die) => {
     const el = document.createElement("div");
     el.className = "die";
     el.dataset.name = die.name;
     el.innerHTML = `
+      <div class="die-qty">
+        <button type="button" class="die-qty-minus" aria-label="Ubrat ${die.name} ze skupiny">−</button>
+        <span class="die-qty-count">0</span>
+      </div>
       <div class="die-name">${die.name}</div>
       <div class="die-shape">
         <svg viewBox="0 0 80 80" aria-hidden="true">
@@ -1969,9 +2177,135 @@
       </div>
       <div class="die-range">1 – ${die.sides}</div>
     `;
-    el.addEventListener("click", () => rollDie(die, el));
+    el.addEventListener("click", (e) => {
+      if (e.target.closest(".die-qty-minus")) {
+        setPoolQty(die.name, pool[die.name] - 1);
+      } else {
+        setPoolQty(die.name, pool[die.name] + 1);
+      }
+      buzz(8);
+    });
     tray.appendChild(el);
   });
+
+  function setPoolQty(name, n) {
+    n = Math.max(0, Math.min(20, Math.round(isNaN(n) ? 0 : n)));
+    pool[name] = n;
+    const el = tray.querySelector('.die[data-name="' + name + '"]');
+    if (el) {
+      el.querySelector(".die-qty-count").textContent = n;
+      el.classList.toggle("in-group", n > 0);
+    }
+    const total = Object.values(pool).reduce((a, b) => a + b, 0);
+    poolRollBtn.disabled = total === 0;
+    saveSettings();
+  }
+
+  function poolNotation(parts, mod) {
+    let s = parts.map((p) => `${p.qty}${p.die.name}`).join(" + ");
+    if (mod > 0) s += ` + ${mod}`;
+    else if (mod < 0) s += ` − ${Math.abs(mod)}`;
+    return s;
+  }
+
+  function poolCritClass(parts) {
+    const d20part = parts.find((p) => p.die.sides === 20);
+    if (d20part && d20part.qty === 1) {
+      if (d20part.rolls[0] === 20) return "crit-hit";
+      if (d20part.rolls[0] === 1) return "crit-miss";
+    }
+    return "";
+  }
+
+  function showPoolResultDie(parts) {
+    const label = parts.map((p) => `${p.qty}${p.die.name}`).join(" + ");
+    resultDie.innerHTML =
+      '<div class="rd-inner"><span class="rd-label rd-pool-label">' + escHtml(label) + '</span></div>';
+    resultDie.classList.add("show");
+  }
+
+  function showPoolResult(parts, mod, total, crit) {
+    resultTotal.textContent = total;
+    resultTotal.className = "result-total" + (crit ? " " + crit : "");
+    resultDie.classList.remove("crit-hit", "crit-miss");
+    if (crit) resultDie.classList.add(crit);
+
+    let label = poolNotation(parts, mod);
+    const breakdown = parts.map((p) => `${p.qty}${p.die.name}: [${p.rolls.join(", ")}]`).join("  +  ");
+    label += `  →  ${breakdown}`;
+    if (mod !== 0) label += ` ${mod > 0 ? "+" : "−"} ${Math.abs(mod)}`;
+    label += ` = ${total}`;
+    if (crit === "crit-hit") label = `<span class="result-tag hit">Kritický zásah!</span> — ` + label;
+    else if (crit === "crit-miss") label = `<span class="result-tag miss">Kritické selhání!</span> — ` + label;
+    resultLabel.innerHTML = label;
+  }
+
+  function recordPoolRoll(parts, mod, total, crit) {
+    const entry = {
+      id: genRollId(),
+      die: null,
+      pool: parts.map((p) => ({ name: p.die.name, qty: p.qty, rolls: p.rolls })),
+      notation: poolNotation(parts, mod),
+      rolls: parts.reduce((acc, p) => acc.concat(p.rolls), []),
+      mod: mod,
+      total: total,
+      mode: "pool",
+      alt: null,
+      crit: crit,
+      ts: Date.now()
+    };
+    history.unshift(entry);
+    if (history.length > MAX_HISTORY) history.length = MAX_HISTORY;
+    saveHistory();
+    renderHistory(entry.id);
+  }
+
+  function rollPool() {
+    const parts = DICE
+      .filter((die) => pool[die.name] > 0)
+      .map((die) => ({ die: die, qty: pool[die.name] }));
+    if (!parts.length) return;
+
+    tray.querySelectorAll(".die").forEach((d) => d.classList.remove("active", "crit-hit", "crit-miss"));
+    advBtn.classList.remove("active");
+    disBtn.classList.remove("active");
+    buzz([12, 40, 10, 40, 8]);
+
+    resultDie.classList.remove("crit-hit", "crit-miss");
+    showPoolResultDie(parts);
+    resultTotal.textContent = "…";
+    resultTotal.className = "result-total rolling";
+    resultLabel.textContent = "Házím...";
+
+    const mod = parseInt(modifierInput.value, 10) || 0;
+    setTimeout(() => {
+      parts.forEach((p) => { p.rolls = Array.from({ length: p.qty }, () => rand(p.die.sides)); });
+      const sum = parts.reduce((acc, p) => acc + p.rolls.reduce((a, b) => a + b, 0), 0);
+      const total = sum + mod;
+      const crit = poolCritClass(parts);
+
+      // Highlight every die type that took part, showing the last value
+      // rolled for that type right on its own tile.
+      parts.forEach((p) => {
+        const el = tray.querySelector('.die[data-name="' + p.die.name + '"]');
+        if (!el) return;
+        el.classList.add("active");
+        if (crit && p.die.sides === 20 && p.qty === 1) el.classList.add(crit);
+        const valEl = el.querySelector(".die-value");
+        if (valEl) valEl.textContent = p.rolls[p.rolls.length - 1];
+      });
+      // The group is spent once it's rolled — empty every counter again.
+      DICE.forEach((d) => setPoolQty(d.name, 0));
+
+      showPoolResult(parts, mod, total, crit);
+      recordPoolRoll(parts, mod, total, crit);
+
+      if (crit === "crit-hit") buzz([0, 60, 50, 60, 50, 120]);
+      else if (crit === "crit-miss") buzz([0, 200]);
+      else buzz(35);
+    }, 600);
+  }
+  poolRollBtn.addEventListener("click", rollPool);
 
   // ---------- Haptics ----------
   function buzz(pattern) {
@@ -2016,12 +2350,15 @@
     // haptic "tumble" while the die spins (stutter pattern)
     buzz([12, 40, 10, 40, 8]);
 
-    setQty(parseInt(qtyVal.value, 10)); // normalize + snap field to a valid value
-    const qty = quantity;
+    // Only ever called for a single quick-roll (e.g. a skill/save button on
+    // the sheet) — the tray itself now adds to the group instead of rolling.
+    const qty = 1;
     const mod = parseInt(modifierInput.value, 10) || 0;
 
     // Highlight this die as the active/last-rolled one (clear crit state for now)
     tray.querySelectorAll(".die").forEach((d) => d.classList.remove("active", "crit-hit", "crit-miss"));
+    advBtn.classList.remove("active");
+    disBtn.classList.remove("active");
     el.classList.add("active");
 
     // Show the rolled die's shape in the result banner
@@ -2040,35 +2377,20 @@
       if (flicks > 6) clearInterval(flicker);
     }, 70);
 
-    const mode = rollMode;
     setTimeout(() => {
       clearInterval(flicker);
 
-      const rollSet = () => {
-        const s = [];
-        for (let i = 0; i < qty; i++) s.push(rand(die.sides));
-        return s;
-      };
+      const tag = pendingRollTag;
+      pendingRollTag = null;
 
-      let rolls, sum, alt = null; // alt = the discarded set's sum (adv/dis only)
-      if (mode === "adv" || mode === "dis") {
-        // Advantage/disadvantage: roll the pool twice, keep the higher/lower total
-        const a = rollSet(), b = rollSet();
-        const sa = a.reduce((x, y) => x + y, 0);
-        const sb = b.reduce((x, y) => x + y, 0);
-        const keepA = mode === "adv" ? sa >= sb : sa <= sb;
-        rolls = keepA ? a : b;
-        sum = keepA ? sa : sb;
-        alt = keepA ? sb : sa;
-      } else {
-        rolls = rollSet();
-        sum = rolls.reduce((a, b) => a + b, 0);
-      }
+      const rolls = [];
+      for (let i = 0; i < qty; i++) rolls.push(rand(die.sides));
+      const sum = rolls.reduce((a, b) => a + b, 0);
       const total = sum + mod;
 
       valueEl.textContent = rolls[rolls.length - 1];
-      showResult(die, rolls, mod, sum, total, qty, mode, alt);
-      recordRoll(die, rolls, mod, total, qty, mode, alt);
+      showResult(die, rolls, mod, sum, total, qty, "normal", null, tag);
+      recordRoll(die, rolls, mod, total, qty, "normal", null, tag);
 
       // haptic on landing — emphatic for crits
       const crit = critClass(die, rolls, qty);
@@ -2076,6 +2398,76 @@
       else if (crit === "crit-miss") buzz([0, 200]);
       else buzz(35);
     }, 600);
+  }
+
+  // ---------- Advantage / disadvantage: always 2×d20, keep higher/lower ----------
+  // Per the actual rules this only ever applies to a d20 — so these are
+  // dedicated instant-roll buttons (not a toggle you then had to apply by
+  // clicking some other die/quantity combination).
+  function rollAdvantage(mode) {
+    const die = DICE.find((d) => d.sides === 20);
+    const el = tray.querySelector('.die[data-name="d20"]');
+    const mod = parseInt(modifierInput.value, 10) || 0;
+
+    tray.querySelectorAll(".die").forEach((d) => d.classList.remove("active", "crit-hit", "crit-miss"));
+    advBtn.classList.remove("active");
+    disBtn.classList.remove("active");
+    const activeBtn = mode === "adv" ? advBtn : disBtn;
+    activeBtn.classList.add("active");
+
+    let valueEl = null;
+    if (el) {
+      el.classList.add("active");
+      valueEl = el.querySelector(".die-value");
+      el.classList.remove("spin");
+      void el.offsetWidth;
+      el.classList.add("spin");
+    }
+    buzz([12, 40, 10, 40, 8]);
+
+    resultDie.classList.remove("crit-hit", "crit-miss");
+    showResultDie(die, 1);
+    resultTotal.textContent = "…";
+    resultTotal.className = "result-total rolling";
+    resultLabel.textContent = "Házím...";
+
+    let flicks = 0;
+    const flicker = setInterval(() => {
+      const v = rand(20);
+      if (valueEl) valueEl.textContent = v;
+      flicks++;
+      if (flicks > 6) clearInterval(flicker);
+    }, 70);
+
+    setTimeout(() => {
+      clearInterval(flicker);
+      const a = rand(20), b = rand(20);
+      const keepA = mode === "adv" ? a >= b : a <= b;
+      const kept = keepA ? a : b;
+      const alt = keepA ? b : a;
+      const total = kept + mod;
+
+      if (valueEl) valueEl.textContent = kept;
+      showResult(die, [kept], mod, kept, total, 1, mode, alt);
+      recordRoll(die, [kept], mod, total, 1, mode, alt);
+
+      const crit = critClass(die, [kept], 1);
+      if (crit === "crit-hit") buzz([0, 60, 50, 60, 50, 120]);
+      else if (crit === "crit-miss") buzz([0, 200]);
+      else buzz(35);
+    }, 600);
+  }
+
+  // Quick-roll from a skill/save row on the sheet: sets the shared
+  // modifier + quantity controls to match that row's computed bonus, then
+  // rolls the d20 tile exactly as if it had been clicked directly — so the
+  // roller and the sheet never disagree about what's being added.
+  function rollFromSheet(bonus, label) {
+    pendingRollTag = label;
+    setMod(bonus);
+    const d20 = DICE.find((d) => d.sides === 20);
+    const el = tray.querySelector('.die[data-name="d20"]');
+    if (el) rollDie(d20, el);
   }
 
   function critClass(die, rolls, qty) {
@@ -2093,7 +2485,7 @@
     return s;
   }
 
-  function showResult(die, rolls, mod, sum, total, qty, mode, alt) {
+  function showResult(die, rolls, mod, sum, total, qty, mode, alt, tag) {
     mode = mode || "normal";
     const crit = critClass(die, rolls, qty);
     resultTotal.textContent = total;
@@ -2125,6 +2517,7 @@
     } else if (crit === "crit-miss") {
       label = `<span class="result-tag miss">Kritické selhání!</span> — ` + label;
     }
+    if (tag) label = `<span class="result-skill-tag">${escHtml(tag)}</span>` + label;
     resultLabel.innerHTML = label;
   }
 
@@ -2162,9 +2555,13 @@
     return (d || DICE[1]).points; // fallback: d6 square
   }
 
-  function recordRoll(die, rolls, mod, total, qty, mode, alt) {
+  function genRollId() {
+    return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  }
+
+  function recordRoll(die, rolls, mod, total, qty, mode, alt, tag) {
     const entry = {
-      id: (Date.now().toString(36) + Math.random().toString(36).slice(2, 7)),
+      id: genRollId(),
       die: die.name,
       notation: notation(die, qty, mod),
       rolls: rolls,
@@ -2172,6 +2569,7 @@
       total: total,
       mode: mode || "normal",
       alt: alt,
+      tag: tag || null,
       crit: critClass(die, rolls, qty),
       ts: Date.now()
     };
@@ -2205,11 +2603,13 @@
 
     historyList.innerHTML = history.map((h) => {
       const critCls = h.crit ? " " + h.crit : "";
-      const isAdv = h.mode === "adv", isDis = h.mode === "dis";
+      const isAdv = h.mode === "adv", isDis = h.mode === "dis", isPool = h.mode === "pool";
       let detail;
       if (isAdv || isDis) {
         const kept = h.rolls.reduce((a, b) => a + b, 0);
         detail = `${isAdv ? "Výhoda" : "Nevýhoda"}: ${kept} vs ${h.alt}`;
+      } else if (isPool && Array.isArray(h.pool)) {
+        detail = h.pool.map((p) => `${p.qty}${p.name}: [${p.rolls.join(", ")}]`).join("  +  ");
       } else {
         detail = `Hozeno [${h.rolls.join(", ")}]`;
       }
@@ -2220,14 +2620,15 @@
       let tag = "";
       if (h.crit === "crit-hit") tag = " ⚔️ Kritický zásah";
       else if (h.crit === "crit-miss") tag = " 💀 Kritické selhání";
-      const points = pointsForEntry(h);
+      const skillTagHtml = h.tag ? `<span class="result-skill-tag">${escHtml(h.tag)}</span> ` : "";
+      const shapeHtml = isPool
+        ? `<div class="hist-shape hist-shape-pool" aria-hidden="true">🎲</div>`
+        : `<div class="hist-shape" aria-hidden="true"><svg viewBox="0 0 80 80"><polygon points="${pointsForEntry(h)}" /></svg></div>`;
       return `
         <div class="hist-item${critCls}">
-          <div class="hist-shape" aria-hidden="true">
-            <svg viewBox="0 0 80 80"><polygon points="${points}" /></svg>
-          </div>
+          ${shapeHtml}
           <div class="hist-body">
-            <div class="hist-notation">${h.notation}${modeTag}${tag}</div>
+            <div class="hist-notation">${skillTagHtml}${h.notation}${modeTag}${tag}</div>
             <div class="hist-detail">${detail}</div>
             <div class="hist-time">${formatTime(h.ts)}</div>
           </div>
@@ -2241,22 +2642,6 @@
       if (btn) btn.closest(".hist-item").classList.add("hist-new");
     }
   }
-
-  // ---------- Quantity ----------
-  function setQty(n) {
-    if (isNaN(n)) n = 1;
-    quantity = Math.max(1, Math.min(20, Math.round(n)));
-    qtyVal.value = quantity;
-    saveSettings();
-  }
-  document.getElementById("qtyPlus").addEventListener("click", () => { setQty(quantity + 1); buzz(8); });
-  document.getElementById("qtyMinus").addEventListener("click", () => { setQty(quantity - 1); buzz(8); });
-  // Keep manual entry clean + clamped, but track raw typing live
-  qtyVal.addEventListener("input", () => {
-    const n = parseInt(qtyVal.value, 10);
-    if (!isNaN(n)) { quantity = Math.max(1, Math.min(20, n)); saveSettings(); }
-  });
-  qtyVal.addEventListener("change", () => setQty(parseInt(qtyVal.value, 10)));
 
   // ---------- Modifier ----------
   function setMod(n) {
@@ -2278,16 +2663,8 @@
   modifierInput.addEventListener("change", () => setMod(parseInt(modifierInput.value, 10)));
 
   // ---------- Roll mode (advantage / disadvantage) ----------
-  function setRollMode(mode) {
-    rollMode = (mode === "adv" || mode === "dis") ? mode : "normal";
-    advBtn.classList.toggle("active", rollMode === "adv");
-    disBtn.classList.toggle("active", rollMode === "dis");
-    advBtn.setAttribute("aria-pressed", rollMode === "adv");
-    disBtn.setAttribute("aria-pressed", rollMode === "dis");
-    saveSettings();
-  }
-  advBtn.addEventListener("click", () => { setRollMode(rollMode === "adv" ? "normal" : "adv"); buzz(8); });
-  disBtn.addEventListener("click", () => { setRollMode(rollMode === "dis" ? "normal" : "dis"); buzz(8); });
+  advBtn.addEventListener("click", () => rollAdvantage("adv"));
+  disBtn.addEventListener("click", () => rollAdvantage("dis"));
 
   // ---------- Drawer (history) ----------
   const overlay = document.getElementById("overlay");
@@ -2429,7 +2806,7 @@
     loadSettings();
     resultTotal.textContent = "—";
     resultTotal.className = "result-total";
-    resultLabel.textContent = "Vyber si kostku a nech rozhodnout osud";
+    resultLabel.textContent = "Přidej kostky do skupiny a hoď";
     resultDie.classList.remove("show", "crit-hit", "crit-miss");
     resultDie.innerHTML = "";
     tray.querySelectorAll(".die").forEach((d) => d.classList.remove("active", "crit-hit", "crit-miss"));
@@ -2470,22 +2847,21 @@
   function saveSettings() {
     try {
       localStorage.setItem(SETTINGS_KEY, JSON.stringify({
-        qty: quantity,
         mod: parseInt(modifierInput.value, 10) || 0,
-        mode: rollMode
+        pool: pool
       }));
     } catch (e) { /* storage unavailable — ignore */ }
   }
   function loadSettings() {
     let s = {};
     try { s = JSON.parse(localStorage.getItem(SETTINGS_KEY) || "{}") || {}; } catch (e) { s = {}; }
-    setQty(typeof s.qty === "number" ? s.qty : 1);
     setMod(typeof s.mod === "number" ? s.mod : 0);
-    setRollMode(s.mode);
+    DICE.forEach((die) => setPoolQty(die.name, (s.pool && s.pool[die.name]) || 0));
   }
 
   // ---------- Restore the last roll's result banner on load ----------
   function dieForEntry(h) {
+    if (h.mode === "pool") return null;
     let name = h.die;
     if (!name && h.notation) {
       const m = h.notation.match(/d\d+/);
@@ -2494,6 +2870,26 @@
     return DICE.find((x) => x.name === name) || null;
   }
   function restoreLastRoll(h) {
+    if (h.mode === "pool" && Array.isArray(h.pool)) {
+      const parts = h.pool
+        .map((p) => ({ die: DICE.find((d) => d.name === p.name), qty: p.qty, rolls: p.rolls }))
+        .filter((p) => p.die);
+      if (!parts.length) return;
+      tray.querySelectorAll(".die").forEach((d) => d.classList.remove("active", "crit-hit", "crit-miss"));
+      advBtn.classList.remove("active");
+      disBtn.classList.remove("active");
+      parts.forEach((p) => {
+        const el = tray.querySelector('.die[data-name="' + p.die.name + '"]');
+        if (!el) return;
+        el.classList.add("active");
+        if (h.crit && p.die.sides === 20 && p.qty === 1) el.classList.add(h.crit);
+        const valEl = el.querySelector(".die-value");
+        if (valEl && Array.isArray(p.rolls) && p.rolls.length) valEl.textContent = p.rolls[p.rolls.length - 1];
+      });
+      showPoolResultDie(parts);
+      showPoolResult(parts, h.mod || 0, h.total, h.crit);
+      return;
+    }
     const die = dieForEntry(h);
     if (!die || !Array.isArray(h.rolls) || !h.rolls.length) return;
     const rolls = h.rolls;
@@ -2503,6 +2899,8 @@
 
     selected = die;
     tray.querySelectorAll(".die").forEach((d) => d.classList.remove("active", "crit-hit", "crit-miss"));
+    advBtn.classList.toggle("active", h.mode === "adv");
+    disBtn.classList.toggle("active", h.mode === "dis");
     const el = tray.querySelector('.die[data-name="' + die.name + '"]');
     if (el) {
       el.classList.add("active");
@@ -2510,7 +2908,7 @@
       if (valEl) valEl.textContent = rolls[rolls.length - 1];
     }
     showResultDie(die, qty);
-    showResult(die, rolls, mod, total - mod, total, qty, h.mode, h.alt);
+    showResult(die, rolls, mod, total - mod, total, qty, h.mode, h.alt, h.tag);
   }
 
   // ---------- Character sheet (Deník postavy) ----------
@@ -2662,23 +3060,98 @@
     return Date.now().toString(36) + sheetIdCounter.toString(36);
   }
 
+  // Effective score = written-down base + any equipment/item bonus (e.g.
+  // gauntlets of ogre power) — the modifier is always derived from this,
+  // never typed in directly, so it can't drift out of sync.
+  function abilityScoreTotal(key) {
+    const base = parseInt(sheet[key + "_score"], 10);
+    if (isNaN(base)) return null;
+    return base + (parseInt(sheet[key + "_item"], 10) || 0);
+  }
+  function fmtSigned(n) {
+    return (n >= 0 ? "+" : "−") + Math.abs(n);
+  }
+  // Bonus for one save/skill row: ability modifier + proficiency bonus
+  // (only if that row's checkbox is on) + an optional misc bonus (magic
+  // items, feats, expertise-by-hand, etc).
+  function computeRowBonus(rowKey, abilityKey) {
+    const total = abilityScoreTotal(abilityKey);
+    const mod = total === null ? 0 : Math.floor((total - 10) / 2);
+    const prof = sheet[rowKey + "_prof"] ? (parseInt(sheet.profBonus, 10) || 0) : 0;
+    const misc = parseInt(sheet[rowKey + "_misc"], 10) || 0;
+    return mod + prof + misc;
+  }
+
+  function renderAbilityRow(rowKey, label, abilityKey) {
+    const bonus = computeRowBonus(rowKey, abilityKey);
+    return `<div class="ab-row" data-row-key="${rowKey}">` +
+      `<label class="ab-check"><input type="checkbox" data-key="${rowKey}_prof" ${sheet[rowKey + "_prof"] ? "checked" : ""}>` +
+      `<span>${label}</span></label>` +
+      `<input type="text" class="ab-row-misc" data-key="${rowKey}_misc" value="${escHtml(sheet[rowKey + "_misc"] || "")}" placeholder="0" title="Další bonus (kouzlo, vybavení…)">` +
+      `<span class="ab-row-total">${fmtSigned(bonus)}</span>` +
+      `<button type="button" class="ab-roll-btn" data-roll-bonus="${bonus}" data-roll-label="${escHtml(label)}" title="Hodit k20 s tímto bonusem">🎲</button>` +
+      `</div>`;
+  }
+
   function renderAbilityCard(a) {
-    let rows = `<div class="ab-row">` +
-      `<label class="ab-check"><input type="checkbox" data-key="${a.key}_save_prof" ${sheet[a.key + "_save_prof"] ? "checked" : ""}>` +
-      `<span>Záchranný hod</span></label>` +
-      `<input type="text" data-key="${a.key}_save_val" value="${escHtml(sheet[a.key + "_save_val"] || "")}"></div>`;
+    const total = abilityScoreTotal(a.key);
+    const mod = total === null ? 0 : Math.floor((total - 10) / 2);
+    const base = parseInt(sheet[a.key + "_score"], 10) || 0;
+    const item = parseInt(sheet[a.key + "_item"], 10) || 0;
+    const detail = (item && total !== null)
+      ? ` <span class="ab-mod-detail">(${base} ${item >= 0 ? "+" : "−"} ${Math.abs(item)} = ${total})</span>`
+      : "";
+
+    let rows = renderAbilityRow(a.key + "_save", "Záchranný hod", a.key);
     a.skills.forEach((s) => {
-      const k = "skill_" + s.key;
-      rows += `<div class="ab-row">` +
-        `<label class="ab-check"><input type="checkbox" data-key="${k}_prof" ${sheet[k + "_prof"] ? "checked" : ""}>` +
-        `<span>${s.label}</span></label>` +
-        `<input type="text" data-key="${k}_val" value="${escHtml(sheet[k + "_val"] || "")}"></div>`;
+      rows += renderAbilityRow("skill_" + s.key, s.label, a.key);
     });
-    return `<div class="ab-card">` +
+
+    return `<div class="ab-card" data-ability="${a.key}">` +
       `<div class="ab-name">${a.label.toUpperCase()}</div>` +
-      `<input type="text" class="ab-score" data-key="${a.key}_score" value="${escHtml(sheet[a.key + "_score"] || "")}" placeholder="—">` +
+      `<div class="ab-score-row">` +
+        `<div class="ab-score-field">` +
+          `<input type="text" class="ab-score" data-key="${a.key}_score" value="${escHtml(sheet[a.key + "_score"] || "")}" placeholder="—">` +
+          `<label>Základ</label>` +
+        `</div>` +
+        `<div class="ab-score-field ab-score-item-field">` +
+          `<input type="text" class="ab-score-item" data-key="${a.key}_item" value="${escHtml(sheet[a.key + "_item"] || "")}" placeholder="0">` +
+          `<label>Vybavení</label>` +
+        `</div>` +
+      `</div>` +
+      `<div class="ab-mod-readout">Modifikátor <strong>${total === null ? "—" : fmtSigned(mod)}</strong>${detail}</div>` +
       rows +
       `</div>`;
+  }
+
+  // Patches just the computed numbers (mod readout, row totals, roll-button
+  // bonuses) in place — no re-render — so typing a score or ticking a
+  // proficiency box updates live without ever stealing focus mid-keystroke.
+  function updateAbilityComputed() {
+    ABILITIES.forEach((a) => {
+      const card = sheetBody.querySelector('.ab-card[data-ability="' + a.key + '"]');
+      if (!card) return;
+      const total = abilityScoreTotal(a.key);
+      const mod = total === null ? 0 : Math.floor((total - 10) / 2);
+      const base = parseInt(sheet[a.key + "_score"], 10) || 0;
+      const item = parseInt(sheet[a.key + "_item"], 10) || 0;
+      const detail = (item && total !== null)
+        ? ` <span class="ab-mod-detail">(${base} ${item >= 0 ? "+" : "−"} ${Math.abs(item)} = ${total})</span>`
+        : "";
+      const readout = card.querySelector(".ab-mod-readout");
+      if (readout) readout.innerHTML = `Modifikátor <strong>${total === null ? "—" : fmtSigned(mod)}</strong>${detail}`;
+
+      const rowKeys = [a.key + "_save"].concat(a.skills.map((s) => "skill_" + s.key));
+      rowKeys.forEach((rowKey) => {
+        const rowEl = card.querySelector('.ab-row[data-row-key="' + rowKey + '"]');
+        if (!rowEl) return;
+        const bonus = computeRowBonus(rowKey, a.key);
+        const totalEl = rowEl.querySelector(".ab-row-total");
+        if (totalEl) totalEl.textContent = fmtSigned(bonus);
+        const btn = rowEl.querySelector(".ab-roll-btn");
+        if (btn) btn.dataset.rollBonus = bonus;
+      });
+    });
   }
 
   // ---------- Structured attacks table ----------
@@ -2976,11 +3449,12 @@
     sheet[t.dataset.key] = t.value;
     scheduleSaveSheet();
     updateVitals();
+    updateAbilityComputed();
   });
   sheetBody.addEventListener("change", (e) => {
     const t = e.target;
     if (!t.dataset.key) return;
-    if (t.type === "checkbox") { sheet[t.dataset.key] = t.checked; saveSheetData(); updateVitals(); return; }
+    if (t.type === "checkbox") { sheet[t.dataset.key] = t.checked; saveSheetData(); updateVitals(); updateAbilityComputed(); return; }
     if (t.tagName === "SELECT") {
       sheet[t.dataset.key] = t.value;
       saveSheetData();
@@ -2997,6 +3471,11 @@
 
   // ---------- Add / remove structured rows (attacks, spell names) ----------
   sheetBody.addEventListener("click", (e) => {
+    const abRollBtn = e.target.closest(".ab-roll-btn");
+    if (abRollBtn) {
+      rollFromSheet(parseInt(abRollBtn.dataset.rollBonus, 10) || 0, abRollBtn.dataset.rollLabel || "");
+      return;
+    }
     if (e.target.closest("#atkAddBtn")) {
       sheet.attackIds = Array.isArray(sheet.attackIds) ? sheet.attackIds : [];
       sheet.attackIds.push(genId());
