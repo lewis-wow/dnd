@@ -675,6 +675,13 @@
   .history-list {
     flex: 1;
     overflow-y: auto;
+    /* Explicit, not left as the "visible" default — overflow-y:auto alone
+       makes the UA auto-promote overflow-x to "auto" too (the same
+       coupling rule documented on <html> above). Every delete re-renders
+       the WHOLE list, so every remaining row replays its slideIn entrance
+       (translateX(20px) → 0) again; without this, that 20px of transient
+       overflow briefly triggered a real horizontal scrollbar/shift. */
+    overflow-x: hidden;
     /* Reserve the scrollbar's gutter even when nothing overflows yet, so
        deleting the item that was causing the overflow doesn't make the
        scrollbar disappear mid-animation and shift every remaining row
