@@ -913,6 +913,16 @@
     border: 1px solid var(--edge);
     border-radius: 12px;
     background: var(--bg-2);
+    transition: opacity .15s, box-shadow .15s, border-color .15s;
+  }
+  /* Dragged via the ⠿ handle to reorder sections — see the pointer-event
+     drag logic below. Lifted look while active; DOM order (and therefore
+     both the multi-column layout and what gets saved) updates live as it
+     passes over other sections, not just on drop. */
+  .sheet-section.dragging {
+    opacity: 0.6;
+    box-shadow: 0 14px 32px rgba(0,0,0,0.5);
+    border-color: var(--gold);
   }
   .sheet-section-head {
     display: flex;
@@ -920,6 +930,23 @@
     gap: 10px;
     padding: 14px 14px 4px;
   }
+  .sheet-drag-handle {
+    flex: 0 0 auto;
+    background: transparent;
+    border: none;
+    color: var(--text-dim);
+    font-size: 1.15rem;
+    line-height: 1;
+    padding: 4px 6px;
+    margin: -4px -2px -4px -6px;
+    border-radius: 6px;
+    cursor: grab;
+    touch-action: none;
+    transition: color .15s, background .15s;
+  }
+  .sheet-drag-handle:hover { color: var(--gold); background: var(--face); }
+  .sheet-drag-handle:active,
+  .sheet-section.dragging .sheet-drag-handle { cursor: grabbing; color: var(--gold-bright); }
   .sheet-section-head .acc-ico { font-size: 1.1rem; flex: 0 0 auto; }
   .sheet-section-head .acc-title { flex: 1 1 auto; color: var(--gold); font-weight: 700; letter-spacing: 0.5px; font-size: 0.95rem; }
   .sheet-section-body { padding: 6px 14px 14px; }
@@ -2640,6 +2667,64 @@
     return html;
   }
 
+  // ---------- Reorderable sections (drag the ⠿ handle) ----------
+  const SHEET_ORDER_KEY = "dnd_sheet_order_v1";
+
+  function orderedSheetSections() {
+    let order = [];
+    try { order = JSON.parse(localStorage.getItem(SHEET_ORDER_KEY) || "[]"); } catch (e) { order = []; }
+    if (!Array.isArray(order) || !order.length) return SHEET_SECTIONS;
+    const byId = {};
+    SHEET_SECTIONS.forEach((s) => { byId[s.id] = s; });
+    const result = order.map((id) => byId[id]).filter(Boolean);
+    // Any section not in the saved order (e.g. added in a later update)
+    // just falls in at the end, in its default position.
+    SHEET_SECTIONS.forEach((s) => { if (!order.includes(s.id)) result.push(s); });
+    return result;
+  }
+
+  function saveSheetOrder() {
+    const order = Array.from(sheetBody.querySelectorAll(".sheet-section")).map((el) => el.dataset.secId);
+    try { localStorage.setItem(SHEET_ORDER_KEY, JSON.stringify(order)); } catch (e) { /* ignore */ }
+  }
+
+  // Drag via pointer events (not the HTML5 Drag-and-drop API — that one
+  // has no real touch support, and this app is heavily used on phones).
+  // Whatever section is actually rendered under the pointer becomes the
+  // swap target, found with elementFromPoint rather than a Y-coordinate
+  // comparison — the sheet can be laid out in 1/2/3 CSS columns, where
+  // visual neighbours aren't necessarily DOM neighbours.
+  let dragSection = null;
+  sheetBody.addEventListener("pointerdown", (e) => {
+    const handle = e.target.closest(".sheet-drag-handle");
+    if (!handle) return;
+    const section = handle.closest(".sheet-section");
+    if (!section) return;
+    e.preventDefault();
+    dragSection = section;
+    section.classList.add("dragging");
+    handle.setPointerCapture(e.pointerId);
+    buzz(8);
+  });
+  sheetBody.addEventListener("pointermove", (e) => {
+    if (!dragSection) return;
+    const target = document.elementFromPoint(e.clientX, e.clientY);
+    const overSection = target && target.closest && target.closest(".sheet-section");
+    if (!overSection || overSection === dragSection || overSection.parentElement !== sheetBody) return;
+    const rect = overSection.getBoundingClientRect();
+    const before = e.clientY < rect.top + rect.height / 2;
+    sheetBody.insertBefore(dragSection, before ? overSection : overSection.nextSibling);
+  });
+  function endSheetDrag() {
+    if (!dragSection) return;
+    dragSection.classList.remove("dragging");
+    dragSection = null;
+    saveSheetOrder();
+    buzz(6);
+  }
+  sheetBody.addEventListener("pointerup", endSheetDrag);
+  sheetBody.addEventListener("pointercancel", endSheetDrag);
+
   function buildSectionBody(sec) {
     if (sec.abilities) {
       return `<div class="ab-grid">${ABILITIES.map(renderAbilityCard).join("")}</div>` +
@@ -2662,14 +2747,16 @@
 
   function renderSection(sec) {
     // Always fully expanded — this is a static section, not a toggle.
-    return `<div class="sheet-section">` +
-      `<div class="sheet-section-head"><span class="acc-ico">${sec.icon}</span>` +
+    return `<div class="sheet-section" data-sec-id="${sec.id}">` +
+      `<div class="sheet-section-head">` +
+      `<button type="button" class="sheet-drag-handle" title="Přetáhnout a přeuspořádat sekci" aria-label="Přesunout sekci ${escHtml(sec.title)}">⠿</button>` +
+      `<span class="acc-ico">${sec.icon}</span>` +
       `<span class="acc-title">${sec.title}</span></div>` +
       `<div class="sheet-section-body" id="sheetSecBody_${sec.id}">${buildSectionBody(sec)}</div></div>`;
   }
 
   function renderSheetBody() {
-    sheetBody.innerHTML = SHEET_SECTIONS.map(renderSection).join("");
+    sheetBody.innerHTML = orderedSheetSections().map(renderSection).join("");
   }
 
   function loadSheetData() {
