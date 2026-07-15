@@ -1154,21 +1154,6 @@
   .sheet-field-other { margin-top: 6px; }
   .sheet-field-other.hidden { display: none; }
 
-  /* Single checkbox fields (e.g. Inspirace) — same clickable-label pattern
-     as the ability save/skill rows, but as a standalone field. */
-  .sheet-check {
-    display: flex;
-    align-items: center;
-    gap: 9px;
-    background: var(--face);
-    border: 1px solid var(--edge);
-    border-radius: 8px;
-    padding: 9px 10px;
-    cursor: pointer;
-  }
-  .sheet-check input[type="checkbox"] { accent-color: var(--gold); width: 16px; height: 16px; flex: 0 0 auto; cursor: pointer; }
-  .sheet-check span { font-size: 0.88rem; color: var(--text); }
-
   /* Ability score cards (with nested saves + skills) */
   .ab-grid {
     display: grid;
@@ -1183,11 +1168,14 @@
     padding: 12px 14px 14px;
   }
   .ab-card .ab-name { color: var(--gold-bright); font-weight: 700; letter-spacing: 1px; font-size: 0.85rem; margin-bottom: 8px; }
-  /* Base score + equipment/item bonus side by side — the two numbers that
-     together make up the effective score the modifier is computed from
-     (e.g. base 15 + gauntlets +2 = 17). */
+  /* Base score, point-buy cost readout, and equipment/item bonus side by
+     side — Base + Equipment together make up the effective score the
+     modifier is computed from (e.g. base 15 + gauntlets +2 = 17); Points is
+     a pure reference readout (point-buy cost of Base), never fed back in.
+     All three columns share the same width/type size so nothing looks like
+     the "primary" field and their labels line up evenly above them. */
   .ab-score-row { display: flex; gap: 8px; margin-bottom: 6px; }
-  .ab-score-field { flex: 1 1 auto; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .ab-score-field { flex: 1 1 0; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
   .ab-score-field label {
     text-align: center;
     color: var(--text-dim);
@@ -1195,17 +1183,16 @@
     letter-spacing: 0.5px;
     text-transform: uppercase;
   }
-  .ab-score-item-field { flex: 0 0 66px; }
   .ab-card .ab-score {
     width: 100%;
     text-align: center;
-    font-size: 1.3rem;
+    font-size: 1.05rem;
     font-weight: 800;
     background: var(--face);
     border: 1px solid var(--edge);
     border-radius: 8px;
     color: var(--text);
-    padding: 8px;
+    padding: 8px 2px;
     font-family: inherit;
   }
   .ab-card .ab-score:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 2px rgba(217,180,90,0.2); }
@@ -1222,6 +1209,21 @@
     font-family: inherit;
   }
   .ab-score-item:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 2px rgba(217,180,90,0.2); }
+  /* Points is a read-only derived readout (like ab-mod-readout/ab-row-total)
+     — styled to look non-editable so it doesn't invite typing. */
+  .ab-score-points {
+    width: 100%;
+    text-align: center;
+    font-size: 1.05rem;
+    font-weight: 700;
+    background: var(--bg-1);
+    border: 1px solid var(--edge);
+    border-radius: 8px;
+    color: var(--text-dim);
+    padding: 8px 2px;
+    font-family: inherit;
+    cursor: default;
+  }
   /* Read-only computed readout — never typed into directly, always derived
      from score + item bonus, so it can never drift out of sync with them. */
   .ab-mod-readout {
@@ -1240,18 +1242,7 @@
     border-top: 1px solid rgba(58,47,82,0.5);
   }
   .ab-row:first-of-type { border-top: none; }
-  /* Wrapping the checkbox + text in a <label> makes the whole row clickable,
-     not just the tiny checkbox box — native browser behaviour, no JS needed. */
-  .ab-row .ab-check {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex: 1 1 auto;
-    min-width: 0;
-    cursor: pointer;
-  }
-  .ab-row input[type="checkbox"] { accent-color: var(--gold); width: 15px; height: 15px; flex: 0 0 auto; cursor: pointer; }
-  .ab-row .ab-check span { flex: 1 1 auto; font-size: 0.8rem; color: var(--text); min-width: 0; }
+  .ab-row-label { flex: 1 1 auto; min-width: 0; font-size: 0.8rem; color: var(--text); }
   .ab-row input[type="text"] {
     width: 40px;
     flex: 0 0 auto;
@@ -1368,10 +1359,11 @@
   }
   .atk-row input[type="text"]:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 2px rgba(217,180,90,0.2); }
 
-  /* Structured spell-name lists (one row per known spell) */
-  .spell-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
-  .spell-row { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; }
-  .spell-row input[type="text"] {
+  /* Structured single-line item lists: spell names, features, equipment,
+     languages — one row per item, shared across every use. */
+  .item-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+  .item-row { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; }
+  .item-row input[type="text"] {
     background: var(--face);
     border: 1px solid var(--edge);
     color: var(--text);
@@ -1381,7 +1373,18 @@
     font-family: inherit;
     width: 100%;
   }
-  .spell-row input[type="text"]:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 2px rgba(217,180,90,0.2); }
+  .item-row input[type="text"]:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 2px rgba(217,180,90,0.2); }
+  /* Sub-heading above each item list within a section (e.g. "Vybavení"
+     inside "Schopnosti, vybavení a jazyky") — same look as a sheet-field
+     label so it reads as part of the same form language. */
+  .sheet-list-label {
+    color: var(--text-dim);
+    font-size: 0.68rem;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    margin: 14px 0 6px;
+  }
+  .sheet-list-label:first-child { margin-top: 0; }
 
   /* Shared add/remove-row buttons */
   .row-add-btn {
@@ -1718,11 +1721,6 @@
         <span class="vital-val" id="vitalAc">—</span>
       </div>
       <div class="vital-chip">
-        <span class="vital-ico">⚡</span>
-        <span class="vital-label">Ini</span>
-        <span class="vital-val" id="vitalIni">—</span>
-      </div>
-      <div class="vital-chip">
         <span class="vital-ico">🏃</span>
         <span class="vital-label">Rychlost</span>
         <span class="vital-val" id="vitalSpeed">—</span>
@@ -1825,14 +1823,14 @@
         <div class="acc-body">
           <p><strong>Jádro hry:</strong> kdykoli je výsledek nejistý, hodíš
           <em>1k20 + oprava vlastnosti (+ zdatnostní bonus)</em> a porovnáš se
-          <strong>stupněm obtížnosti (SO)</strong>. Když se mu vyrovnáš nebo ho překročíš, uspěješ.</p>
-          <p class="muted">Typické SO: snadné 10 · střední 15 · těžké 20.</p>
+          <strong>stupněm obtížnosti</strong>. Když se mu vyrovnáš nebo ho překročíš, uspěješ.</p>
+          <p class="muted">Typický stupeň obtížnosti: snadné 10 · střední 15 · těžké 20.</p>
 
           <p><strong>Tři základní hody (1k20):</strong></p>
           <ul>
             <li><strong>Ověření vlastnosti</strong> — zvládneš danou akci? (např. Síla na šplhání, Charisma na přesvědčování).</li>
             <li><strong>Hod na útok</strong> — porovnáš s <strong>obranným číslem (OČ)</strong> cíle. Základní OČ = 10 + oprava Obratnosti. Přirozená <strong>20</strong> je vždy kritický zásah, <strong>1</strong> vždy minutí.</li>
-            <li><strong>Záchranný hod</strong> — abys odolal kouzlu, jedu, pádu apod. SO kouzla = 8 + oprava + zdatnostní bonus sesílatele.</li>
+            <li><strong>Záchranný hod</strong> — abys odolal kouzlu, jedu, pádu apod. Stupeň obtížnosti kouzla = 8 + oprava + zdatnostní bonus sesílatele.</li>
           </ul>
 
           <p><strong>Výhoda a nevýhoda:</strong> hodíš <em>dvěma</em> k20 — s výhodou bereš
@@ -2097,7 +2095,6 @@
   const topbar = document.querySelector(".topbar");
   const vitalName = document.getElementById("vitalName");
   const vitalAc = document.getElementById("vitalAc");
-  const vitalIni = document.getElementById("vitalIni");
   const vitalSpeed = document.getElementById("vitalSpeed");
   const vitalHp = document.getElementById("vitalHp");
   const vitalInsp = document.getElementById("vitalInsp");
@@ -2126,10 +2123,9 @@
   function updateVitals() {
     vitalName.textContent = sheet.charName ? sheet.charName : "Nová postava";
     vitalAc.textContent = sheet.ac || "—";
-    vitalIni.textContent = sheet.initiative || "—";
     vitalSpeed.textContent = sheet.speed || "—";
     const cur = sheet.currentHp || "", max = sheet.maxHp || "";
-    vitalHp.textContent = (cur || max) ? (cur || "?") + " / " + (max || "?") : "—";
+    vitalHp.textContent = (cur && max) ? cur + " / " + max : (cur || max || "—");
     const inspCount = parseInt(sheet.inspiration, 10) || 0;
     vitalInspVal.textContent = inspCount;
     vitalInsp.classList.toggle("on", inspCount > 0);
@@ -2802,6 +2798,7 @@
     // Reset every bit of in-memory state + the UI back to a fresh-load look.
     history = [];
     sheet = {};
+    applyDefaultAbilityScores();
     renderHistory();
     loadSettings();
     resultTotal.textContent = "—";
@@ -2954,43 +2951,50 @@
   const SPELL_ABILITIES = ["Inteligence", "Moudrost", "Charisma"];
   const CHAR_LEVELS = Array.from({ length: 20 }, (_, i) => String(i + 1));
 
+  // Which ability powers spellcasting for each class — shown in the
+  // Spellcasting Ability tooltip so players don't have to look it up.
+  const SPELL_ABILITY_BY_CLASS = {
+    "Inteligence": ["Alchymista", "Kouzelník"],
+    "Moudrost": ["Klerik", "Druid", "Hraničář"],
+    "Charisma": ["Bard", "Paladin", "Čaroděj", "Černokněžník"]
+  };
+  const SPELL_ABILITY_TIP = "Podle povolání: " + Object.keys(SPELL_ABILITY_BY_CLASS)
+    .map((ab) => ab + " – " + SPELL_ABILITY_BY_CLASS[ab].join(", "))
+    .join("; ") + ".";
+
   const SHEET_SECTIONS = [
     { id: "basic", icon: "🪪", title: "Základní informace", fields: [
-      { key: "charName", label: "Jméno postavy" },
-      { key: "class", label: "Povolání", type: "select", options: CLASSES, placeholder: "Vyber povolání…", otherValue: "Jiné" },
-      { key: "level", label: "Úroveň", type: "select", options: CHAR_LEVELS, placeholder: "—" },
-      { key: "background", label: "Zázemí", type: "select", options: BACKGROUNDS, placeholder: "Vyber zázemí…", otherValue: "Jiné" },
-      { key: "playerName", label: "Jméno hráče" },
-      { key: "race", label: "Rasa", type: "select", options: RACES, placeholder: "Vyber rasu…", otherValue: "Jiná" },
-      { key: "alignment", label: "Přesvědčení", type: "select", options: ALIGNMENTS, placeholder: "Vyber přesvědčení…" },
-      { key: "xp", label: "Body zkušenosti" },
-      { key: "profBonus", label: "Zdatnostní bonus" },
-      { key: "inspiration", label: "Inspirace", type: "select", options: ["1", "2", "3", "4", "5"], placeholder: "0" }
+      { key: "charName", label: "Jméno postavy", tip: "Jméno tvé postavy" },
+      { key: "class", label: "Povolání", type: "select", options: CLASSES, placeholder: "Vyber povolání…", otherValue: "Jiné", tip: "Herní povolání postavy (bojovník, kouzelník, zloděj…)" },
+      { key: "subclass", label: "Podtřída", placeholder: "Např. Škola věštění", tip: "Specializace v rámci povolání (např. Škola věštění, Cesta berserkera, Kruh měsíce) — volí se obvykle mezi 1. a 3. úrovní podle povolání" },
+      { key: "level", label: "Úroveň", type: "select", options: CHAR_LEVELS, placeholder: "—", tip: "Aktuální úroveň postavy" },
+      { key: "background", label: "Zázemí", type: "select", options: BACKGROUNDS, placeholder: "Vyber zázemí…", otherValue: "Jiné", tip: "Odkud postava pochází — dává zdatnosti, vybavení a kus příběhu" },
+      { key: "playerName", label: "Jméno hráče", tip: "Jméno hráče u stolu" },
+      { key: "race", label: "Rasa", type: "select", options: RACES, placeholder: "Vyber rasu…", otherValue: "Jiná", tip: "Rasa/druh postavy" },
+      { key: "alignment", label: "Přesvědčení", type: "select", options: ALIGNMENTS, placeholder: "Vyber přesvědčení…", tip: "Morální a etické zaměření postavy" },
+      { key: "xp", label: "Body zkušenosti", tip: "Nasbírané body zkušenosti — jejich součet určuje úroveň" },
+      { key: "profBonus", label: "Zdatnostní bonus", tip: "Bonus přičítaný ke zdatným záchranám, dovednostem a útokům — roste s úrovní postavy" },
+      { key: "inspiration", label: "Inspirace", type: "select", options: ["1", "2", "3", "4", "5"], placeholder: "0", tip: "Body inspirace, které lze utratit za výhodu na hodu" }
     ]},
     { id: "combat", icon: "⚔️", title: "Boj a životy", fields: [
-      { key: "ac", label: "OČ (obranné číslo)" },
-      { key: "initiative", label: "Iniciativa" },
-      { key: "speed", label: "Rychlost" },
-      { key: "maxHp", label: "Maximum životů" },
-      { key: "currentHp", label: "Aktuální životy" },
-      { key: "tempHp", label: "Dočasné životy" },
-      { key: "hitDice", label: "Kostky života" },
-      { key: "deathSuccess", label: "Záchrany př. smrtí — úspěchy" },
-      { key: "deathFail", label: "Záchrany př. smrtí — neúspěchy" }
+      { key: "ac", label: "OČ (obranné číslo)", tip: "Obranné číslo — čím vyšší, tím hůř tě útočník trefí" },
+      { key: "speed", label: "Rychlost", tip: "Rychlost pohybu ve stopách za kolo" },
+      { key: "maxHp", label: "Maximum životů", tip: "Maximální počet životů postavy" },
+      { key: "currentHp", label: "Aktuální životy", tip: "Kolik životů má postava právě teď" },
+      { key: "tempHp", label: "Dočasné životy", tip: "Dočasné životy navíc — ubývají jako první" },
+      { key: "hitDice", label: "Kostky života", tip: "Kostky života použitelné při odpočinku k léčení" },
+      { key: "deathSuccess", label: "Záchrany př. smrtí — úspěchy", tip: "Záchranné hody proti smrti, které postava už uspěla (3 = přežití)" },
+      { key: "deathFail", label: "Záchrany př. smrtí — neúspěchy", tip: "Záchranné hody proti smrti, které postava neuspěla (3 = smrt)" }
     ]},
     { id: "abilities", icon: "📊", title: "Vlastnosti, záchrany a dovednosti", abilities: true },
     { id: "attacks", icon: "🗡️", title: "Útoky", attacksList: true },
     { id: "personality", icon: "🎭", title: "Osobnost postavy", fields: [
-      { key: "traits", label: "Osobnostní rysy", type: "textarea" },
-      { key: "ideals", label: "Ideály", type: "textarea" },
-      { key: "bonds", label: "Pouta", type: "textarea" },
-      { key: "flaws", label: "Vady", type: "textarea" }
+      { key: "traits", label: "Osobnostní rysy", type: "textarea", tip: "Krátké návyky a chování, které postavu odlišují" },
+      { key: "ideals", label: "Ideály", type: "textarea", tip: "Zásady a přesvědčení, kterými se postava řídí" },
+      { key: "bonds", label: "Pouta", type: "textarea", tip: "Lidé, místa nebo věci, ke kterým má postava pouto" },
+      { key: "flaws", label: "Vady", type: "textarea", tip: "Slabina nebo chyba, která postavu občas přivede do potíží" }
     ]},
-    { id: "features", icon: "🎒", title: "Schopnosti, vybavení a jazyky", fields: [
-      { key: "features", label: "Schopnosti a rysy", type: "textarea" },
-      { key: "otherProf", label: "Ostatní zdatnosti a jazyky", type: "textarea" },
-      { key: "equipment", label: "Vybavení a poznámky", type: "textarea" }
-    ]},
+    { id: "features", icon: "🎒", title: "Schopnosti, vybavení a jazyky", itemLists: true },
     { id: "appearance", icon: "🧝", title: "Vzhled a osobní údaje", fields: [
       { key: "age", label: "Věk" },
       { key: "height", label: "Výška" },
@@ -3018,9 +3022,10 @@
   function renderField(f) {
     const wideCls = f.wide ? " wide" : "";
     const ph = f.placeholder ? ` placeholder="${escHtml(f.placeholder)}"` : "";
+    const tipAttr = f.tip ? ` title="${escHtml(f.tip)}"` : "";
     if (f.type === "textarea") {
       return `<div class="sheet-field${wideCls}"><label>${f.label}</label>` +
-        `<textarea data-key="${f.key}" rows="${f.rows || 3}"${ph}>${escHtml(sheet[f.key] || "")}</textarea></div>`;
+        `<textarea data-key="${f.key}" rows="${f.rows || 3}"${ph}${tipAttr}>${escHtml(sheet[f.key] || "")}</textarea></div>`;
     }
     if (f.type === "select") {
       const cur = sheet[f.key] || "";
@@ -3040,18 +3045,10 @@
       }
       const otherAttr = f.otherValue ? ` data-other-value="${escHtml(f.otherValue)}"` : "";
       return `<div class="sheet-field${wideCls}"><label>${f.label}</label>` +
-        `<select data-key="${f.key}"${otherAttr}>${placeholderOpt}${opts}</select>${otherHtml}</div>`;
-    }
-    if (f.type === "checkbox") {
-      const checked = !!sheet[f.key];
-      // Same label-above-control layout as every other field, so it isn't
-      // the odd one out in the grid.
-      return `<div class="sheet-field${wideCls}"><label>${f.label}</label>` +
-        `<label class="ab-check sheet-check"><input type="checkbox" data-key="${f.key}"${checked ? " checked" : ""}>` +
-        `<span>Ano</span></label></div>`;
+        `<select data-key="${f.key}"${otherAttr}${tipAttr}>${placeholderOpt}${opts}</select>${otherHtml}</div>`;
     }
     return `<div class="sheet-field${wideCls}"><label>${f.label}</label>` +
-      `<input type="text" data-key="${f.key}" value="${escHtml(sheet[f.key] || "")}"${ph}></div>`;
+      `<input type="text" data-key="${f.key}" value="${escHtml(sheet[f.key] || "")}"${ph}${tipAttr}></div>`;
   }
 
   let sheetIdCounter = 0;
@@ -3071,23 +3068,28 @@
   function fmtSigned(n) {
     return (n >= 0 ? "+" : "−") + Math.abs(n);
   }
-  // Bonus for one save/skill row: ability modifier + proficiency bonus
-  // (only if that row's checkbox is on) + an optional misc bonus (magic
-  // items, feats, expertise-by-hand, etc).
+  // Standard 5e point-buy cost table (27 points to spend across all six
+  // scores at character creation, 8-15 only) — shown next to Base purely as
+  // a reference readout, never fed back into any calculation.
+  const POINT_BUY_COST = { 8: 0, 9: 1, 10: 2, 11: 3, 12: 4, 13: 5, 14: 7, 15: 9 };
+  function pointBuyCost(baseScore) {
+    return Object.prototype.hasOwnProperty.call(POINT_BUY_COST, baseScore) ? POINT_BUY_COST[baseScore] : null;
+  }
+  // Bonus for one save/skill row: ability modifier + an optional misc bonus
+  // (proficiency, magic items, feats, expertise-by-hand, etc — the player
+  // just types the total extra into the one field).
   function computeRowBonus(rowKey, abilityKey) {
     const total = abilityScoreTotal(abilityKey);
     const mod = total === null ? 0 : Math.floor((total - 10) / 2);
-    const prof = sheet[rowKey + "_prof"] ? (parseInt(sheet.profBonus, 10) || 0) : 0;
     const misc = parseInt(sheet[rowKey + "_misc"], 10) || 0;
-    return mod + prof + misc;
+    return mod + misc;
   }
 
   function renderAbilityRow(rowKey, label, abilityKey) {
     const bonus = computeRowBonus(rowKey, abilityKey);
     return `<div class="ab-row" data-row-key="${rowKey}">` +
-      `<label class="ab-check"><input type="checkbox" data-key="${rowKey}_prof" ${sheet[rowKey + "_prof"] ? "checked" : ""}>` +
-      `<span>${label}</span></label>` +
-      `<input type="text" class="ab-row-misc" data-key="${rowKey}_misc" value="${escHtml(sheet[rowKey + "_misc"] || "")}" placeholder="0" title="Další bonus (kouzlo, vybavení…)">` +
+      `<span class="ab-row-label">${label}</span>` +
+      `<input type="text" class="ab-row-misc" data-key="${rowKey}_misc" value="${escHtml(sheet[rowKey + "_misc"] || "")}" placeholder="0" title="Další bonus (např. zdatnostní bonus, pokud je postava zdatná, kouzlo, vybavení…)">` +
       `<span class="ab-row-total">${fmtSigned(bonus)}</span>` +
       `<button type="button" class="ab-roll-btn" data-roll-bonus="${bonus}" data-roll-label="${escHtml(label)}" title="Hodit k20 s tímto bonusem">🎲</button>` +
       `</div>`;
@@ -3098,6 +3100,7 @@
     const mod = total === null ? 0 : Math.floor((total - 10) / 2);
     const base = parseInt(sheet[a.key + "_score"], 10) || 0;
     const item = parseInt(sheet[a.key + "_item"], 10) || 0;
+    const points = pointBuyCost(base);
     const detail = (item && total !== null)
       ? ` <span class="ab-mod-detail">(${base} ${item >= 0 ? "+" : "−"} ${Math.abs(item)} = ${total})</span>`
       : "";
@@ -3110,12 +3113,16 @@
     return `<div class="ab-card" data-ability="${a.key}">` +
       `<div class="ab-name">${a.label.toUpperCase()}</div>` +
       `<div class="ab-score-row">` +
-        `<div class="ab-score-field">` +
-          `<input type="text" class="ab-score" data-key="${a.key}_score" value="${escHtml(sheet[a.key + "_score"] || "")}" placeholder="—">` +
+        `<div class="ab-score-field ab-score-base-field">` +
+          `<input type="text" class="ab-score" data-key="${a.key}_score" value="${escHtml(sheet[a.key + "_score"] || "")}" placeholder="—" title="Základní hodnota vlastnosti, jak vyšla při tvorbě postavy">` +
           `<label>Základ</label>` +
         `</div>` +
+        `<div class="ab-score-field ab-score-points-field">` +
+          `<input type="text" class="ab-score-points" value="${points === null ? "—" : points}" readonly title="Cena tohoto základu v systému point-buy (27 bodů celkem na rozdělení mezi všechny vlastnosti)">` +
+          `<label>Body</label>` +
+        `</div>` +
         `<div class="ab-score-field ab-score-item-field">` +
-          `<input type="text" class="ab-score-item" data-key="${a.key}_item" value="${escHtml(sheet[a.key + "_item"] || "")}" placeholder="0">` +
+          `<input type="text" class="ab-score-item" data-key="${a.key}_item" value="${escHtml(sheet[a.key + "_item"] || "")}" placeholder="0" title="Bonus z vybavení nebo kouzelných předmětů (např. rukavice obřích sil)">` +
           `<label>Vybavení</label>` +
         `</div>` +
       `</div>` +
@@ -3140,6 +3147,12 @@
         : "";
       const readout = card.querySelector(".ab-mod-readout");
       if (readout) readout.innerHTML = `Modifikátor <strong>${total === null ? "—" : fmtSigned(mod)}</strong>${detail}`;
+
+      const pointsEl = card.querySelector(".ab-score-points");
+      if (pointsEl) {
+        const points = pointBuyCost(base);
+        pointsEl.value = points === null ? "—" : points;
+      }
 
       const rowKeys = [a.key + "_save"].concat(a.skills.map((s) => "skill_" + s.key));
       rowKeys.forEach((rowKey) => {
@@ -3180,27 +3193,62 @@
       `<button type="button" class="row-add-btn" id="atkAddBtn">+ Přidat útok</button>`;
   }
 
-  // ---------- Structured, repeatable spell-name lists ----------
-  function renderSpellNameList(level) {
-    const idsKey = "spellIds" + level;
-    const ids = ensureListSeed(idsKey);
+  // ---------- Structured, repeatable single-line item lists ----------
+  // Shared by spell names, and (below) features, equipment and languages —
+  // one text field per row plus a delete button, and an "add row" button
+  // underneath. `legacyKey` is optional: if given and the list hasn't been
+  // created yet, it seeds one row per non-empty line of that older
+  // freeform textarea field instead of a single blank row, so switching a
+  // field over to the list UI doesn't lose whatever was already typed in.
+  function ensureListSeedFromText(idsKey, keyPrefix, legacyKey) {
+    if (Array.isArray(sheet[idsKey])) {
+      if (!sheet[idsKey].length) sheet[idsKey] = [genId()];
+      return sheet[idsKey];
+    }
+    const legacy = typeof sheet[legacyKey] === "string" ? sheet[legacyKey] : "";
+    const lines = legacy.split("\n").map((l) => l.trim()).filter(Boolean);
+    sheet[idsKey] = lines.length ? lines.map((line) => {
+      const id = genId();
+      sheet[keyPrefix + id] = line;
+      return id;
+    }) : [genId()];
+    return sheet[idsKey];
+  }
+
+  function renderSimpleItemList(sectionId, idsKey, keyPrefix, placeholder, addLabel, delLabel, legacyKey) {
+    const ids = legacyKey ? ensureListSeedFromText(idsKey, keyPrefix, legacyKey) : ensureListSeed(idsKey);
     const rows = ids.map((id) => {
-      const key = "spellname_" + level + "_" + id;
+      const key = keyPrefix + id;
       const v = escHtml(sheet[key] || "");
-      return `<div class="spell-row">` +
-        `<input type="text" data-key="${key}" value="${v}" placeholder="Název kouzla">` +
-        `<button type="button" class="row-del-btn spell-del-btn" data-spell-level="${level}" data-spell-id="${id}" aria-label="Smazat kouzlo">×</button>` +
+      return `<div class="item-row">` +
+        `<input type="text" data-key="${key}" value="${v}" placeholder="${escHtml(placeholder)}">` +
+        `<button type="button" class="row-del-btn item-del-btn" data-section="${sectionId}" data-ids-key="${idsKey}" data-key-prefix="${keyPrefix}" data-item-id="${id}" aria-label="${escHtml(delLabel)}">×</button>` +
         `</div>`;
     }).join("");
-    return `<div class="spell-list">${rows}</div>` +
-      `<button type="button" class="row-add-btn spell-add-btn" data-spell-level="${level}">+ Přidat kouzlo</button>`;
+    return `<div class="item-list">${rows}</div>` +
+      `<button type="button" class="row-add-btn item-add-btn" data-section="${sectionId}" data-ids-key="${idsKey}">+ ${escHtml(addLabel)}</button>`;
+  }
+
+  function renderSpellNameList(level) {
+    return renderSimpleItemList("spells", "spellIds" + level, "spellname_" + level + "_", "Název kouzla", "Přidat kouzlo", "Smazat kouzlo");
+  }
+
+  // ---------- Features, equipment & languages (same repeatable-row UI as
+  // spells/attacks, instead of one big freeform textarea each) ----------
+  function renderFeaturesSection() {
+    return `<div class="sheet-list-label">Schopnosti a rysy</div>` +
+      renderSimpleItemList("features", "featureIds", "feature_", "Schopnost nebo rys", "Přidat schopnost", "Smazat schopnost", "features") +
+      `<div class="sheet-list-label">Vybavení</div>` +
+      renderSimpleItemList("features", "equipIds", "equip_", "Předmět", "Přidat předmět", "Smazat předmět", "equipment") +
+      `<div class="sheet-list-label">Jazyky a ostatní zdatnosti</div>` +
+      renderSimpleItemList("features", "langIds", "lang_", "Jazyk nebo zdatnost", "Přidat jazyk", "Smazat jazyk", "otherProf");
   }
 
   function renderSpellSection() {
     let html = `<div class="sheet-grid">` +
-      renderField({ key: "spellAbility", label: "Sesílací vlastnost", type: "select", options: SPELL_ABILITIES, placeholder: "Vyber vlastnost…" }) +
-      renderField({ key: "spellSaveDc", label: "SO záchrany kouzel" }) +
-      renderField({ key: "spellAttackBonus", label: "Útočný bonus kouzla" }) +
+      renderField({ key: "spellAbility", label: "Sesílací vlastnost", type: "select", options: SPELL_ABILITIES, placeholder: "Vyber vlastnost…", tip: SPELL_ABILITY_TIP }) +
+      renderField({ key: "spellSaveDc", label: "Stupeň obtížnosti záchrany kouzel", tip: "Stupeň obtížnosti, který musí cíl přehodit, aby odolal tvému kouzlu (obvykle 8 + oprava + zdatnostní bonus)" }) +
+      renderField({ key: "spellAttackBonus", label: "Útočný bonus kouzla", tip: "Bonus přičítaný k hodu na útok kouzlem" }) +
       `</div>`;
     html += `<div class="spell-lvl">` +
       `<div class="spell-lvl-head"><span class="lvl-badge">0</span><span class="lvl-title">Triky</span></div>` +
@@ -3337,6 +3385,7 @@
     }
     if (sec.spellcasting) return renderSpellSection();
     if (sec.attacksList) return renderAttacksBody();
+    if (sec.itemLists) return renderFeaturesSection();
     return `<div class="sheet-grid">${sec.fields.map(renderField).join("")}</div>`;
   }
 
@@ -3408,6 +3457,16 @@
       const parsed = JSON.parse(localStorage.getItem(SHEET_KEY) || "{}");
       sheet = (parsed && typeof parsed === "object") ? parsed : {};
     } catch (e) { sheet = {}; }
+    applyDefaultAbilityScores();
+  }
+
+  // 11 is the D&D 5e "average" ability score — seeded once per ability so a
+  // brand-new (or freshly wiped) sheet doesn't show every save/skill bonus
+  // as a blank "—". Never overwrites a score the player already wrote down.
+  function applyDefaultAbilityScores() {
+    ABILITIES.forEach((a) => {
+      if (sheet[a.key + "_score"] === undefined) sheet[a.key + "_score"] = "11";
+    });
   }
 
   function saveSheetData() {
@@ -3496,26 +3555,26 @@
       buzz(10);
       return;
     }
-    const spellAdd = e.target.closest(".spell-add-btn");
-    if (spellAdd) {
-      const level = spellAdd.dataset.spellLevel;
-      const idsKey = "spellIds" + level;
+    // Generic single-line item lists: spell names, features, equipment,
+    // languages — anything rendered by renderSimpleItemList().
+    const itemAdd = e.target.closest(".item-add-btn");
+    if (itemAdd) {
+      const idsKey = itemAdd.dataset.idsKey;
       sheet[idsKey] = Array.isArray(sheet[idsKey]) ? sheet[idsKey] : [];
       sheet[idsKey].push(genId());
       saveSheetData();
-      rerenderSection("spells");
+      rerenderSection(itemAdd.dataset.section);
       buzz(6);
       return;
     }
-    const spellDel = e.target.closest(".spell-del-btn");
-    if (spellDel) {
-      const level = spellDel.dataset.spellLevel;
-      const id = spellDel.dataset.spellId;
-      const idsKey = "spellIds" + level;
+    const itemDel = e.target.closest(".item-del-btn");
+    if (itemDel) {
+      const idsKey = itemDel.dataset.idsKey;
+      const id = itemDel.dataset.itemId;
       sheet[idsKey] = (sheet[idsKey] || []).filter((x) => x !== id);
-      delete sheet["spellname_" + level + "_" + id];
+      delete sheet[itemDel.dataset.keyPrefix + id];
       saveSheetData();
-      rerenderSection("spells");
+      rerenderSection(itemDel.dataset.section);
       buzz(10);
       return;
     }
