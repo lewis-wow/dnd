@@ -49,7 +49,7 @@ export function AttacksSection() {
               onClick={() => handleRemove(i)}
               aria-label="Smazat útok"
               title="Smazat útok"
-              className="flex size-7.5 shrink-0 items-center justify-center rounded-lg border border-edge bg-face text-[1.1rem] leading-none text-text-dim transition-colors hover:border-crimson hover:bg-crimson/20 hover:text-crimson-bright"
+              className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-edge bg-face text-[1.1rem] leading-none text-text-dim transition-colors hover:border-crimson hover:bg-crimson/20 hover:text-crimson-bright"
             >
               ×
             </button>
@@ -59,7 +59,7 @@ export function AttacksSection() {
       <button
         type="button"
         onClick={() => append({ id: genId(), name: "", bonus: "", dmg: "" })}
-        className="w-full rounded-lg border border-dashed border-edge bg-transparent px-3 py-2 text-[0.82rem] tracking-wide text-text-dim transition-[border-color,color,background] hover:border-gold hover:bg-gold/8 hover:text-gold-bright"
+        className="flex h-8 w-full items-center justify-center rounded-lg border border-dashed border-edge bg-transparent px-3 text-[0.82rem] tracking-wide text-text-dim transition-[border-color,color,background] hover:border-gold hover:bg-gold/8 hover:text-gold-bright"
       >
         + Přidat útok
       </button>
