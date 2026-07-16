@@ -5,12 +5,10 @@ export function FormSelect({
   path,
   options,
   placeholder,
-  tip,
 }: {
   path: string;
   options: string[];
   placeholder?: string;
-  tip?: string;
 }) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { control } = useFormContext<any>();
@@ -18,7 +16,7 @@ export function FormSelect({
 
   return (
     <Select value={field.value || ""} onValueChange={field.onChange}>
-      <SelectTrigger title={tip} className="h-8.5 w-full rounded-lg border-edge bg-face px-2.5 py-1 text-[0.92rem] text-foreground data-[size=default]:h-8.5">
+      <SelectTrigger className="h-8.5 w-full rounded-lg border-edge bg-face px-2.5 py-1 text-[0.92rem] text-foreground data-[size=default]:h-8.5">
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent>

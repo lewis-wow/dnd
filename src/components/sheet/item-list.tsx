@@ -1,15 +1,18 @@
 import { useFieldArray, useFormContext } from "react-hook-form";
 import { genId } from "@/lib/data/sheet";
 import { Input } from "@/components/ui/input";
+import { FieldTooltip } from "@/components/shared/field-tooltip";
 
 export function ItemList({
   name,
   placeholder,
+  tip,
   addLabel,
   deleteLabel,
 }: {
   name: string;
   placeholder: string;
+  tip: string;
   addLabel: string;
   deleteLabel: string;
 }) {
@@ -30,20 +33,24 @@ export function ItemList({
     <div className="mb-2.5 flex flex-col gap-2">
       {fields.map((f, i) => (
         <div key={f.id} className="grid grid-cols-[1fr_auto] items-center gap-2">
-          <Input
-            type="text"
-            placeholder={placeholder}
-            className="rounded-lg border-edge bg-face px-2.5 py-2 text-[0.88rem] text-foreground focus-visible:border-gold"
-            {...register(`${name}.${i}.text`)}
-          />
-          <button
-            type="button"
-            onClick={() => handleRemove(i)}
-            aria-label={deleteLabel}
-            className="flex size-[30px] shrink-0 items-center justify-center rounded-lg border border-edge bg-face text-[1.1rem] leading-none text-text-dim transition-colors hover:border-crimson hover:bg-crimson/20 hover:text-crimson-bright"
-          >
-            ×
-          </button>
+          <FieldTooltip content={tip}>
+            <Input
+              type="text"
+              placeholder={placeholder}
+              className="rounded-lg border-edge bg-face px-2.5 py-2 text-[0.88rem] text-foreground focus-visible:border-gold"
+              {...register(`${name}.${i}.text`)}
+            />
+          </FieldTooltip>
+          <FieldTooltip content={deleteLabel}>
+            <button
+              type="button"
+              onClick={() => handleRemove(i)}
+              aria-label={deleteLabel}
+              className="flex size-[30px] shrink-0 items-center justify-center rounded-lg border border-edge bg-face text-[1.1rem] leading-none text-text-dim transition-colors hover:border-crimson hover:bg-crimson/20 hover:text-crimson-bright"
+            >
+              ×
+            </button>
+          </FieldTooltip>
         </div>
       ))}
       <button

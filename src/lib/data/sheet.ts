@@ -297,20 +297,46 @@ export const PERSONALITY_FIELDS: FieldSpec[] = [
 ];
 
 export const APPEARANCE_FIELDS: FieldSpec[] = [
-  { key: "age", label: "Věk", type: "text" },
-  { key: "height", label: "Výška", type: "text" },
-  { key: "weight", label: "Váha", type: "text" },
-  { key: "eyes", label: "Oči", type: "text" },
-  { key: "skin", label: "Pokožka", type: "text" },
-  { key: "hair", label: "Vlasy", type: "text" },
-  { key: "appearance", label: "Vzhled postavy", type: "textarea", wide: true },
+  { key: "age", label: "Věk", type: "text", tip: "Kolik je postavě let" },
+  { key: "height", label: "Výška", type: "text", tip: "Tělesná výška postavy" },
+  { key: "weight", label: "Váha", type: "text", tip: "Tělesná váha postavy" },
+  { key: "eyes", label: "Oči", type: "text", tip: "Barva očí postavy" },
+  { key: "skin", label: "Pokožka", type: "text", tip: "Barva nebo vzhled pokožky postavy" },
+  { key: "hair", label: "Vlasy", type: "text", tip: "Barva a styl vlasů postavy" },
+  {
+    key: "appearance",
+    label: "Vzhled postavy",
+    type: "textarea",
+    wide: true,
+    tip: "Celkový popis vzhledu — oblečení, výrazné znaky, celkový dojem, jaký postava budí",
+  },
 ];
 
 export const BACKSTORY_FIELDS: FieldSpec[] = [
-  { key: "backstory", label: "Minulost postavy", type: "textarea" },
-  { key: "allies", label: "Spojenci a organizace", type: "textarea" },
-  { key: "additionalFeatures", label: "Další schopnosti a rysy", type: "textarea" },
-  { key: "treasure", label: "Poklad", type: "textarea" },
+  {
+    key: "backstory",
+    label: "Minulost postavy",
+    type: "textarea",
+    tip: "Příběh postavy před začátkem dobrodružství — odkud pochází a co ji formovalo",
+  },
+  {
+    key: "allies",
+    label: "Spojenci a organizace",
+    type: "textarea",
+    tip: "Důležití spojenci, frakce nebo organizace, se kterými má postava vztah",
+  },
+  {
+    key: "additionalFeatures",
+    label: "Další schopnosti a rysy",
+    type: "textarea",
+    tip: "Schopnosti nebo rysy postavy, které se nevešly jinam",
+  },
+  {
+    key: "treasure",
+    label: "Poklad",
+    type: "textarea",
+    tip: "Cenné předměty, poklady nebo suvenýry, které postava vlastní",
+  },
 ];
 
 export type SectionId =

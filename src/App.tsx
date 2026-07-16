@@ -7,6 +7,7 @@ import { GuidePane } from "@/components/guide/guide-pane";
 import { DicePane } from "@/components/dice/dice-pane";
 import { SheetPane } from "@/components/sheet/sheet-pane";
 import { HistoryDrawer } from "@/components/history/history-drawer";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { useDiceRoller } from "@/hooks/use-dice-roller";
 import { useResizablePane } from "@/hooks/use-resizable-pane";
 import { useMediaQuery } from "@/hooks/use-media-query";
@@ -98,6 +99,7 @@ function App() {
 
   return (
     <FormProvider {...form}>
+      <TooltipProvider delay={300}>
       <DieGradientDefs />
       <TopBar ref={topbarRef} historyCount={roller.history.length} onOpenHistory={() => setHistoryOpen(true)} />
 
@@ -161,6 +163,7 @@ function App() {
         onClear={roller.clearHistory}
         onWipeAll={handleWipeAll}
       />
+      </TooltipProvider>
     </FormProvider>
   );
 }

@@ -9,6 +9,7 @@ import {
 } from "@/lib/data/sheet";
 import { fmtSigned } from "@/lib/data/dice";
 import { Input } from "@/components/ui/input";
+import { FieldTooltip } from "@/components/shared/field-tooltip";
 
 function AbilityRow({
   abilityKey,
@@ -33,23 +34,28 @@ function AbilityRow({
   return (
     <div className="flex items-center gap-2 border-t border-edge/50 py-1.5 first-of-type:border-t-0">
       <div className="min-w-0 flex-1 text-[0.8rem] text-foreground">{label}</div>
-      <Input
-        type="text"
-        placeholder="0"
-        title="Další bonus (např. zdatnostní bonus, pokud je postava zdatná, kouzlo, vybavení…)"
-        className="h-auto w-10 shrink-0 rounded-md border-edge bg-face p-1 text-center text-[0.82rem] text-foreground"
-        {...register(miscPath)}
-      />
-      <div className="w-8 shrink-0 text-center text-[0.88rem] font-extrabold text-gold-bright">
-        {fmtSigned(bonus)}
-      </div>
-      <button
-        type="button"
-        onClick={() => onRoll(bonus, label)}
-        className="flex size-[26px] shrink-0 items-center justify-center rounded-md border border-edge bg-face text-[0.9rem] leading-none text-gold hover:border-gold hover:bg-face-lit active:scale-90"
-      >
-        🎲
-      </button>
+      <FieldTooltip content={`Další bonus k hodu na ${label.toLowerCase()} (např. zdatnostní bonus, pokud je postava zdatná, kouzlo, vybavení…)`}>
+        <Input
+          type="text"
+          placeholder="0"
+          className="h-auto w-10 shrink-0 rounded-md border-edge bg-face p-1 text-center text-[0.82rem] text-foreground"
+          {...register(miscPath)}
+        />
+      </FieldTooltip>
+      <FieldTooltip content={`Celkový bonus k hodu na ${label.toLowerCase()} (modifikátor vlastnosti + zadaný bonus)`}>
+        <div className="w-8 shrink-0 text-center text-[0.88rem] font-extrabold text-gold-bright">
+          {fmtSigned(bonus)}
+        </div>
+      </FieldTooltip>
+      <FieldTooltip content={`Hodit 1k20 + ${fmtSigned(bonus)} za ${label.toLowerCase()}`}>
+        <button
+          type="button"
+          onClick={() => onRoll(bonus, label)}
+          className="flex size-[26px] shrink-0 items-center justify-center rounded-md border border-edge bg-face text-[0.9rem] leading-none text-gold hover:border-gold hover:bg-face-lit active:scale-90"
+        >
+          🎲
+        </button>
+      </FieldTooltip>
     </div>
   );
 }
@@ -71,32 +77,33 @@ function AbilityCard({ abilityKey, label, skills, onRoll }: { abilityKey: Abilit
       <div className="mb-1.5 flex gap-2">
         <div className="flex min-w-0 flex-1 flex-col gap-1">
           <label className="text-center text-[0.6rem] tracking-wide text-text-dim uppercase">Základ</label>
-          <Input
-            type="text"
-            placeholder="—"
-            title="Základní hodnota vlastnosti, jak vyšla při tvorbě postavy"
-            className="h-auto w-full rounded-lg border-edge bg-face p-2 text-center text-[1.05rem] font-extrabold text-foreground"
-            {...register(`abilities.${abilityKey}.score`)}
-          />
+          <FieldTooltip content="Základní hodnota vlastnosti, jak vyšla při tvorbě postavy">
+            <Input
+              type="text"
+              placeholder="—"
+              className="h-auto w-full rounded-lg border-edge bg-face p-2 text-center text-[1.05rem] font-extrabold text-foreground"
+              {...register(`abilities.${abilityKey}.score`)}
+            />
+          </FieldTooltip>
         </div>
         <div className="flex min-w-0 flex-1 flex-col gap-1">
           <label className="text-center text-[0.6rem] tracking-wide text-text-dim uppercase">Body</label>
-          <div
-            title="Cena tohoto základu v systému point-buy (27 bodů celkem na rozdělení mezi všechny vlastnosti)"
-            className="flex h-auto w-full cursor-default items-center justify-center rounded-lg border border-edge bg-bg-1 p-2 text-center text-[1.05rem] font-bold text-text-dim"
-          >
-            {points === null ? "—" : points}
-          </div>
+          <FieldTooltip content="Cena tohoto základu v systému point-buy (27 bodů celkem na rozdělení mezi všechny vlastnosti) — jen orientační přehled, nikam se nezapočítává">
+            <div className="flex h-auto w-full cursor-default items-center justify-center rounded-lg border border-edge bg-bg-1 p-2 text-center text-[1.05rem] font-bold text-text-dim">
+              {points === null ? "—" : points}
+            </div>
+          </FieldTooltip>
         </div>
         <div className="flex min-w-0 flex-1 flex-col gap-1">
           <label className="text-center text-[0.6rem] tracking-wide text-text-dim uppercase">Vybavení</label>
-          <Input
-            type="text"
-            placeholder="0"
-            title="Bonus z vybavení nebo kouzelných předmětů (např. rukavice obřích sil)"
-            className="h-auto w-full rounded-lg border-edge bg-face p-2 text-center text-[1.05rem] font-extrabold text-foreground"
-            {...register(`abilities.${abilityKey}.item`)}
-          />
+          <FieldTooltip content="Bonus z vybavení nebo kouzelných předmětů (např. rukavice obřích sil)">
+            <Input
+              type="text"
+              placeholder="0"
+              className="h-auto w-full rounded-lg border-edge bg-face p-2 text-center text-[1.05rem] font-extrabold text-foreground"
+              {...register(`abilities.${abilityKey}.item`)}
+            />
+          </FieldTooltip>
         </div>
       </div>
 
@@ -129,11 +136,13 @@ export function AbilitiesSection({ onRoll }: { onRoll: (bonus: number, label: st
 
       <div className="mt-3 flex flex-col gap-1.5">
         <label className="text-[0.68rem] tracking-wide text-text-dim uppercase">Pasivní moudrost (vnímání)</label>
-        <Input
-          type="text"
-          className="rounded-lg border-edge bg-face px-2.5 py-2 text-[0.92rem] text-foreground"
-          {...register("passiveWis")}
-        />
+        <FieldTooltip content="Pasivní hodnota vnímání — 10 + modifikátor Moudrosti (+ zdatnost, je-li postava zdatná). Používá se místo hodu, když si postava ničeho nevšímá aktivně">
+          <Input
+            type="text"
+            className="rounded-lg border-edge bg-face px-2.5 py-2 text-[0.92rem] text-foreground"
+            {...register("passiveWis")}
+          />
+        </FieldTooltip>
       </div>
     </div>
   );

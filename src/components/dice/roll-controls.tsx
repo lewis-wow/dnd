@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils";
 import { MOD_MAX, MOD_MIN } from "@/lib/data/dice";
+import { FieldTooltip } from "@/components/shared/field-tooltip";
 
 export function RollControls({
   mod,
@@ -30,14 +31,16 @@ export function RollControls({
         >
           −
         </button>
-        <input
-          type="number"
-          step={1}
-          value={mod}
-          onChange={(e) => onModChange(parseInt(e.target.value, 10) || 0)}
-          onBlur={(e) => onModChange(Math.max(MOD_MIN, Math.min(MOD_MAX, parseInt(e.target.value, 10) || 0)))}
-          className="min-h-9.5 w-full min-w-0 flex-1 rounded-lg border border-edge bg-face p-2 text-center text-xl font-bold text-foreground [appearance:textfield] focus:border-gold focus:shadow-[0_0_0_2px_rgba(217,180,90,0.2)] focus:outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-        />
+        <FieldTooltip content="Modifikátor přičítaný ke každému hodu — např. oprava vlastnosti a zdatnostní bonus">
+          <input
+            type="number"
+            step={1}
+            value={mod}
+            onChange={(e) => onModChange(parseInt(e.target.value, 10) || 0)}
+            onBlur={(e) => onModChange(Math.max(MOD_MIN, Math.min(MOD_MAX, parseInt(e.target.value, 10) || 0)))}
+            className="min-h-9.5 w-full min-w-0 flex-1 rounded-lg border border-edge bg-face p-2 text-center text-xl font-bold text-foreground [appearance:textfield] focus:border-gold focus:shadow-[0_0_0_2px_rgba(217,180,90,0.2)] focus:outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+          />
+        </FieldTooltip>
         <button
           type="button"
           aria-label="Zvýšit modifikátor"
