@@ -437,15 +437,19 @@ export function createDefaultSheetValues(): SheetFormValues {
     const skills: Record<string, string> = {};
     for (const s of a.skills) skills[s.key] = "";
     abilities[a.key] = {
-      score: "11", // D&D 5e average ability score — the one field with a real default
+      score: "11", // D&D 5e average ability score
       item: "",
       saveMisc: "",
       skills,
     };
   }
 
+  const basic = emptyFieldRecord(BASIC_FIELDS);
+  basic.level = "1"; // every new character starts at level 1
+  basic.profBonus = "+2"; // level 1 proficiency bonus per the 5e progression table
+
   return {
-    basic: emptyFieldRecord(BASIC_FIELDS),
+    basic,
     combat: emptyFieldRecord(COMBAT_FIELDS),
     abilities,
     passiveWis: "",
