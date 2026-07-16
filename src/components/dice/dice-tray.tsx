@@ -1,31 +1,8 @@
-import { DICE, type CritClass, type DieName } from "@/lib/data/dice";
+import { DICE, type DieName } from "@/lib/data/dice";
 import { DieTile } from "@/components/dice/die-tile";
 import type { HistoryEntry } from "@/lib/data/history";
 import type { RollingState } from "@/hooks/use-dice-roller";
-
-function settledDisplay(
-  dieName: DieName,
-  faceValue: string,
-  lastEntry: HistoryEntry | null
-): { value: string; active: boolean; crit: CritClass } {
-  if (!lastEntry) return { value: faceValue, active: false, crit: "" };
-
-  if (lastEntry.mode === "pool") {
-    const part = lastEntry.pool?.find((p) => p.name === dieName);
-    if (!part) return { value: faceValue, active: false, crit: "" };
-    const isCritTile = part.qty === 1 && dieName === "d20";
-    return {
-      value: String(part.rolls[part.rolls.length - 1]),
-      active: true,
-      crit: isCritTile ? lastEntry.crit : "",
-    };
-  }
-
-  if (lastEntry.die === dieName) {
-    return { value: String(lastEntry.rolls[0]), active: true, crit: lastEntry.crit };
-  }
-  return { value: faceValue, active: false, crit: "" };
-}
+import { dieResultDisplay } from "@/lib/format-roll";
 
 export function DiceTray({
   pool,
@@ -52,7 +29,7 @@ export function DiceTray({
     <div className="flex w-full max-w-[760px] flex-wrap justify-center gap-2 min-[641px]:gap-4.5 min-[900px]:max-w-[380px] min-[900px]:gap-2">
       {DICE.map((die) => {
         const isRollingParticipant = !!rolling?.participants.includes(die.name);
-        const settled = settledDisplay(die.name, die.faceValue, lastEntry);
+        const settled = dieResultDisplay(die.name, die.faceValue, lastEntry);
         const displayValue = isRollingParticipant
           ? (flickerValues[die.name] ?? die.faceValue)
           : rolling

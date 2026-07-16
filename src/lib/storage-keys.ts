@@ -3,6 +3,7 @@ export const STORAGE_KEYS = {
   settings: "dnd-dice-settings",
   sheet: "dnd-character-sheet",
   sheetOrder: "dnd-sheet-order",
+  sheetHidden: "dnd-sheet-hidden-sections",
   paneWidth: "dnd-dice-pane-width",
   guideWidth: "dnd-guide-pane-width",
   sheetScroll: "dnd-sheet-scroll",

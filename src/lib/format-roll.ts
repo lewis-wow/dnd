@@ -1,4 +1,31 @@
+import type { CritClass, DieName } from "@/lib/data/dice";
 import type { HistoryEntry } from "@/lib/data/history";
+
+/** What a single die tile/chip should currently show: its settled value from
+ * the last roll (if it took part), or its idle face otherwise. */
+export function dieResultDisplay(
+  dieName: DieName,
+  faceValue: string,
+  lastEntry: HistoryEntry | null
+): { value: string; active: boolean; crit: CritClass } {
+  if (!lastEntry) return { value: faceValue, active: false, crit: "" };
+
+  if (lastEntry.mode === "pool") {
+    const part = lastEntry.pool?.find((p) => p.name === dieName);
+    if (!part) return { value: faceValue, active: false, crit: "" };
+    const isCritTile = part.qty === 1 && dieName === "d20";
+    return {
+      value: String(part.rolls[part.rolls.length - 1]),
+      active: true,
+      crit: isCritTile ? lastEntry.crit : "",
+    };
+  }
+
+  if (lastEntry.die === dieName) {
+    return { value: String(lastEntry.rolls[0]), active: true, crit: lastEntry.crit };
+  }
+  return { value: faceValue, active: false, crit: "" };
+}
 
 function modSuffix(mod: number): string {
   if (mod > 0) return ` + ${mod}`;
