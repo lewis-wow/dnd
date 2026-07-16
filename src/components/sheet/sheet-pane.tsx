@@ -19,6 +19,7 @@ import { cn } from "@/lib/utils";
 import { DEFAULT_SECTION_ORDER, SHEET_SECTIONS, type SectionId } from "@/lib/data/sheet";
 import { distributeIntoColumns } from "@/lib/layout";
 import { useSheetColCount } from "@/hooks/use-sheet-col-count";
+import { useScrollRestore } from "@/hooks/use-scroll-restore";
 import { STORAGE_KEYS } from "@/lib/storage-keys";
 import { SheetSection } from "@/components/sheet/sheet-section";
 import { ImportExport } from "@/components/sheet/import-export";
@@ -115,6 +116,7 @@ const DEFAULT_COLUMNS: SectionId[][] = [DEFAULT_SECTION_ORDER];
 
 export function SheetPane({ onRoll }: { onRoll: (bonus: number, label: string) => void }) {
   const { ref, colCount } = useSheetColCount<HTMLDivElement>();
+  useScrollRestore(ref, STORAGE_KEYS.sheetScroll);
 
   // Persisted directly as per-column membership (not a flat order that gets
   // re-split evenly every render) — distributeIntoColumns always forces
