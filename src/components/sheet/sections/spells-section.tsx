@@ -22,7 +22,7 @@ function SpellLevelCard({ level }: { level: number }) {
         {!isCantrip && (
           <>
             <label className="mr-0.5 text-[0.66rem] tracking-wide text-text-dim">Pozic celkem</label>
-            <FieldTooltip content={`Kolik pozic ${level}. úrovně má postava celkem k dispozici za odpočinek`}>
+            <FieldTooltip className="shrink-0" content={`Kolik pozic ${level}. úrovně má postava celkem k dispozici za odpočinek`}>
               <Input
                 type="text"
                 className="h-auto w-13 rounded-md border-edge bg-face p-1 text-center text-[0.8rem] text-foreground"
@@ -30,7 +30,7 @@ function SpellLevelCard({ level }: { level: number }) {
               />
             </FieldTooltip>
             <label className="mr-0.5 text-[0.66rem] tracking-wide text-text-dim">Utraceno</label>
-            <FieldTooltip content={`Kolik pozic ${level}. úrovně už postava od posledního odpočinku utratila`}>
+            <FieldTooltip className="shrink-0" content={`Kolik pozic ${level}. úrovně už postava od posledního odpočinku utratila`}>
               <Input
                 type="text"
                 className="h-auto w-13 rounded-md border-edge bg-face p-1 text-center text-[0.8rem] text-foreground"
@@ -57,24 +57,24 @@ export function SpellsSection() {
   return (
     <div>
       <div className="mb-3 grid grid-cols-[repeat(auto-fill,minmax(170px,1fr))] gap-3">
-        <FieldTooltip content={SPELL_ABILITY_TIP}>
-          <div className="flex min-w-0 flex-col gap-1.5">
-            <label className="text-[0.68rem] tracking-wide text-text-dim uppercase">Sesílací vlastnost</label>
+        <div className="flex min-w-0 flex-col gap-1.5">
+          <label className="text-[0.68rem] tracking-wide text-text-dim uppercase">Sesílací vlastnost</label>
+          <FieldTooltip content={SPELL_ABILITY_TIP}>
             <FormSelect path="spells.ability" options={SPELL_ABILITIES} placeholder="Vyber vlastnost…" />
-          </div>
-        </FieldTooltip>
-        <FieldTooltip content="Stupeň obtížnosti, který musí cíl přehodit, aby odolal tvému kouzlu (obvykle 8 + oprava sesílací vlastnosti + zdatnostní bonus)">
-          <div className="flex min-w-0 flex-col gap-1.5">
-            <label className="text-[0.68rem] tracking-wide text-text-dim uppercase">Stupeň obtížnosti záchrany kouzel</label>
+          </FieldTooltip>
+        </div>
+        <div className="flex min-w-0 flex-col gap-1.5">
+          <label className="text-[0.68rem] tracking-wide text-text-dim uppercase">Stupeň obtížnosti záchrany kouzel</label>
+          <FieldTooltip content="Stupeň obtížnosti, který musí cíl přehodit, aby odolal tvému kouzlu (obvykle 8 + oprava sesílací vlastnosti + zdatnostní bonus)">
             <Input type="text" className="rounded-lg border-edge bg-face px-2.5 py-2 text-[0.92rem] text-foreground" {...register("spells.saveDc")} />
-          </div>
-        </FieldTooltip>
-        <FieldTooltip content="Bonus přičítaný k hodu na útok kouzlem (oprava sesílací vlastnosti + zdatnostní bonus)">
-          <div className="flex min-w-0 flex-col gap-1.5">
-            <label className="text-[0.68rem] tracking-wide text-text-dim uppercase">Útočný bonus kouzla</label>
+          </FieldTooltip>
+        </div>
+        <div className="flex min-w-0 flex-col gap-1.5">
+          <label className="text-[0.68rem] tracking-wide text-text-dim uppercase">Útočný bonus kouzla</label>
+          <FieldTooltip content="Bonus přičítaný k hodu na útok kouzlem (oprava sesílací vlastnosti + zdatnostní bonus)">
             <Input type="text" className="rounded-lg border-edge bg-face px-2.5 py-2 text-[0.92rem] text-foreground" {...register("spells.attackBonus")} />
-          </div>
-        </FieldTooltip>
+          </FieldTooltip>
+        </div>
       </div>
 
       <div className="flex flex-col gap-3">

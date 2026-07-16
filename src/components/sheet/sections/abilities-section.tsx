@@ -34,28 +34,31 @@ function AbilityRow({
   return (
     <div className="flex items-center gap-2 border-t border-edge/50 py-1.5 first-of-type:border-t-0">
       <div className="min-w-0 flex-1 text-[0.8rem] text-foreground">{label}</div>
-      <FieldTooltip content={`Další bonus k hodu na ${label.toLowerCase()} (např. zdatnostní bonus, pokud je postava zdatná, kouzlo, vybavení…)`}>
+      <FieldTooltip
+        className="shrink-0"
+        content={`Další bonus k hodu na ${label.toLowerCase()} (např. zdatnostní bonus, pokud je postava zdatná, kouzlo, vybavení…)`}
+      >
         <Input
           type="text"
           placeholder="0"
-          className="h-auto w-10 shrink-0 rounded-md border-edge bg-face p-1 text-center text-[0.82rem] text-foreground"
+          className="h-auto w-10 rounded-md border-edge bg-face p-1 text-center text-[0.82rem] text-foreground"
           {...register(miscPath)}
         />
       </FieldTooltip>
-      <FieldTooltip content={`Celkový bonus k hodu na ${label.toLowerCase()} (modifikátor vlastnosti + zadaný bonus)`}>
-        <div className="w-8 shrink-0 text-center text-[0.88rem] font-extrabold text-gold-bright">
-          {fmtSigned(bonus)}
-        </div>
-      </FieldTooltip>
-      <FieldTooltip content={`Hodit 1k20 + ${fmtSigned(bonus)} za ${label.toLowerCase()}`}>
-        <button
-          type="button"
-          onClick={() => onRoll(bonus, label)}
-          className="flex size-[26px] shrink-0 items-center justify-center rounded-md border border-edge bg-face text-[0.9rem] leading-none text-gold hover:border-gold hover:bg-face-lit active:scale-90"
-        >
-          🎲
-        </button>
-      </FieldTooltip>
+      <div
+        className="w-8 shrink-0 text-center text-[0.88rem] font-extrabold text-gold-bright"
+        title={`Celkový bonus k hodu na ${label.toLowerCase()} (modifikátor vlastnosti + zadaný bonus)`}
+      >
+        {fmtSigned(bonus)}
+      </div>
+      <button
+        type="button"
+        onClick={() => onRoll(bonus, label)}
+        title={`Hodit 1k20 ${fmtSigned(bonus)} za ${label.toLowerCase()}`}
+        className="flex size-6.5 shrink-0 items-center justify-center rounded-md border border-edge bg-face text-[0.9rem] leading-none text-gold hover:border-gold hover:bg-face-lit active:scale-90"
+      >
+        🎲
+      </button>
     </div>
   );
 }
@@ -88,11 +91,12 @@ function AbilityCard({ abilityKey, label, skills, onRoll }: { abilityKey: Abilit
         </div>
         <div className="flex min-w-0 flex-1 flex-col gap-1">
           <label className="text-center text-[0.6rem] tracking-wide text-text-dim uppercase">Body</label>
-          <FieldTooltip content="Cena tohoto základu v systému point-buy (27 bodů celkem na rozdělení mezi všechny vlastnosti) — jen orientační přehled, nikam se nezapočítává">
-            <div className="flex h-auto w-full cursor-default items-center justify-center rounded-lg border border-edge bg-bg-1 p-2 text-center text-[1.05rem] font-bold text-text-dim">
-              {points === null ? "—" : points}
-            </div>
-          </FieldTooltip>
+          <div
+            title="Cena tohoto základu v systému point-buy (27 bodů celkem na rozdělení mezi všechny vlastnosti) — jen orientační přehled, nikam se nezapočítává"
+            className="flex h-auto w-full cursor-default items-center justify-center rounded-lg border border-edge bg-bg-1 p-2 text-center text-[1.05rem] font-bold text-text-dim"
+          >
+            {points === null ? "—" : points}
+          </div>
         </div>
         <div className="flex min-w-0 flex-1 flex-col gap-1">
           <label className="text-center text-[0.6rem] tracking-wide text-text-dim uppercase">Vybavení</label>

@@ -92,6 +92,7 @@ function App() {
   function handleWipeAll() {
     Object.values(STORAGE_KEYS).forEach((k) => localStorage.removeItem(k));
     roller.clearHistory();
+    roller.resetRollerDisplay();
     roller.setSettings({ mod: 0, pool: {} });
     form.reset(createDefaultSheetValues());
     setHistoryOpen(false);

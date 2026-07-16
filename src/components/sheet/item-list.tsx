@@ -41,16 +41,15 @@ export function ItemList({
               {...register(`${name}.${i}.text`)}
             />
           </FieldTooltip>
-          <FieldTooltip content={deleteLabel}>
-            <button
-              type="button"
-              onClick={() => handleRemove(i)}
-              aria-label={deleteLabel}
-              className="flex size-[30px] shrink-0 items-center justify-center rounded-lg border border-edge bg-face text-[1.1rem] leading-none text-text-dim transition-colors hover:border-crimson hover:bg-crimson/20 hover:text-crimson-bright"
-            >
-              ×
-            </button>
-          </FieldTooltip>
+          <button
+            type="button"
+            onClick={() => handleRemove(i)}
+            aria-label={deleteLabel}
+            title={deleteLabel}
+            className="flex size-7.5 shrink-0 items-center justify-center rounded-lg border border-edge bg-face text-[1.1rem] leading-none text-text-dim transition-colors hover:border-crimson hover:bg-crimson/20 hover:text-crimson-bright"
+          >
+            ×
+          </button>
         </div>
       ))}
       <button

@@ -169,6 +169,25 @@ button,
   html {
     @apply font-sans;
   }
+
+  /* Browsers don't default <button> to a hand cursor (Chrome/Firefox use
+     "default"), and Tailwind's preflight deliberately doesn't add it back —
+     every clickable control in this app should still look clickable. This
+     lives in @layer base (Tailwind's utilities layer always wins over any
+     unlayered *or* base-layer rule regardless of selector specificity) so a
+     component's own cursor-grab / cursor-col-resize / etc. utility class
+     still overrides this baseline exactly like a normal CSS default would. */
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  select,
+  summary,
+  label[for] {
+    cursor: pointer;
+  }
+  button:disabled,
+  [aria-disabled="true"] {
+    cursor: not-allowed;
+  }
 }
 
 @keyframes spin-roll {

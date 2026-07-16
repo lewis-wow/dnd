@@ -28,27 +28,11 @@ export function SheetField({ sectionKey, field }: { sectionKey: string; field: F
 
   return (
     <div className={cn("flex min-w-0 flex-col gap-1.5", field.wide && "col-span-full")}>
-      {field.tip ? (
-        <FieldTooltip content={field.tip}>
-          <div className="flex min-w-0 flex-col gap-1.5">
-            <label className="text-[0.68rem] tracking-wide text-text-dim uppercase">{field.label}</label>
-            {control}
-          </div>
-        </FieldTooltip>
-      ) : (
-        <>
-          <label className="text-[0.68rem] tracking-wide text-text-dim uppercase">{field.label}</label>
-          {control}
-        </>
-      )}
-      {field.otherValue && (
+      <label className="text-[0.68rem] tracking-wide text-text-dim uppercase">{field.label}</label>
+      {field.tip ? <FieldTooltip content={field.tip}>{control}</FieldTooltip> : control}
+      {field.otherValue && showOther && (
         <FieldTooltip content={`Vlastní ${field.label.toLowerCase()}, pokud není v nabízeném seznamu`}>
-          <Input
-            type="text"
-            placeholder="Uveď vlastní…"
-            className={cn(inputClass, "mt-1.5", !showOther && "hidden")}
-            {...register(otherPath)}
-          />
+          <Input type="text" placeholder="Uveď vlastní…" className={inputClass} {...register(otherPath)} />
         </FieldTooltip>
       )}
     </div>

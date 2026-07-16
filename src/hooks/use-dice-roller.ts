@@ -58,7 +58,14 @@ export function useDiceRoller() {
     []
   );
 
-  const lastEntry = history[0] ?? null;
+  // Independent from `history`: initialized from the most recent entry at
+  // mount (so a reload still shows the last roll, same as the legacy app's
+  // restoreLastRoll), then updated explicitly on every new roll. It must
+  // NOT be a live derivation of history[0] — deleting the top history row,
+  // or clearing history entirely, shouldn't change what the roller is
+  // currently displaying; those are edits to the *log*, not to "what did I
+  // just roll".
+  const [lastEntry, setLastEntry] = useState<HistoryEntry | null>(() => history[0] ?? null);
 
   const clearTimers = useCallback(() => {
     if (flickerTimer.current) {
@@ -160,6 +167,7 @@ export function useDiceRoller() {
         };
         pendingTagRef.current = null;
         pushHistory(entry);
+        setLastEntry(entry);
         setRolling(null);
         landingBuzz(crit);
       }, RESOLVE_MS);
@@ -204,6 +212,7 @@ export function useDiceRoller() {
         ts: Date.now(),
       };
       pushHistory(entry);
+      setLastEntry(entry);
       // The group is spent, win or lose.
       setSettings((s) => ({ ...s, pool: {} }));
       setRolling(null);
@@ -242,6 +251,7 @@ export function useDiceRoller() {
           ts: Date.now(),
         };
         pushHistory(entry);
+        setLastEntry(entry);
         setRolling(null);
         landingBuzz(crit);
       }, RESOLVE_MS);
@@ -266,6 +276,16 @@ export function useDiceRoller() {
 
   const clearHistory = useCallback(() => setHistory([]), [setHistory]);
 
+  // For wipe-all only — resets the roller's own displayed state back to
+  // idle, separately from clearing the history log (see the note on
+  // lastEntry above for why those are two different things).
+  const resetRollerDisplay = useCallback(() => {
+    clearTimers();
+    setRolling(null);
+    setFlickerValues({});
+    setLastEntry(null);
+  }, [clearTimers]);
+
   return {
     dice: DICE,
     pool: settings.pool,
@@ -282,6 +302,7 @@ export function useDiceRoller() {
     lastEntry,
     deleteHistoryEntry,
     clearHistory,
+    resetRollerDisplay,
     setHistory,
     setSettings,
   };
