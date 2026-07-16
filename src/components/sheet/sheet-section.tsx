@@ -7,9 +7,11 @@ import { SheetSectionContent } from "@/components/sheet/sheet-section-content";
 export function SheetSection({
   section,
   onRoll,
+  onHide,
 }: {
   section: SectionMeta;
   onRoll: (bonus: number, label: string) => void;
+  onHide: () => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: section.id,
@@ -42,6 +44,15 @@ export function SheetSection({
         </button>
         <span className="shrink-0 text-[1.1rem]">{section.icon}</span>
         <span className="flex-1 text-[0.95rem] font-bold tracking-wide text-gold">{section.title}</span>
+        <button
+          type="button"
+          onClick={onHide}
+          title={`Skrýt sekci ${section.title}`}
+          aria-label={`Skrýt sekci ${section.title}`}
+          className="-my-1 -mr-1 flex shrink-0 items-center justify-center rounded-md px-1.5 py-1 text-[1.05rem] leading-none text-text-dim transition-colors hover:bg-face hover:text-crimson-bright"
+        >
+          ×
+        </button>
       </div>
       <div className="px-3.5 pt-1.5 pb-3.5">
         <SheetSectionContent id={section.id} onRoll={onRoll} />

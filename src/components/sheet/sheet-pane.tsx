@@ -24,6 +24,7 @@ import { useScrollRestore } from "@/hooks/use-scroll-restore";
 import { STORAGE_KEYS } from "@/lib/storage-keys";
 import { SheetSection } from "@/components/sheet/sheet-section";
 import { ImportExport } from "@/components/sheet/import-export";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 const sectionById = new Map(SHEET_SECTIONS.map((s) => [s.id, s]));
 
@@ -118,22 +119,35 @@ function moveSection(
   return unchanged ? cols : next;
 }
 
-function SheetColumn({ id, sectionIds, onRoll }: { id: string; sectionIds: SectionId[]; onRoll: (bonus: number, label: string) => void }) {
+function SheetColumn({
+  id,
+  sectionIds,
+  hidden,
+  onRoll,
+  onHide,
+}: {
+  id: string;
+  sectionIds: SectionId[];
+  hidden: Set<SectionId>;
+  onRoll: (bonus: number, label: string) => void;
+  onHide: (id: SectionId) => void;
+}) {
   const { setNodeRef, isOver } = useDroppable({ id });
+  const visibleIds = sectionIds.filter((sectionId) => !hidden.has(sectionId));
   return (
-    <SortableContext items={sectionIds} strategy={verticalListSortingStrategy}>
+    <SortableContext items={visibleIds} strategy={verticalListSortingStrategy}>
       <div
         ref={setNodeRef}
         className={cn(
           "flex min-h-15 min-w-0 flex-1 flex-col gap-2.5",
-          sectionIds.length === 0 && "rounded-xl border border-dashed border-edge",
+          visibleIds.length === 0 && "rounded-xl border border-dashed border-edge",
           isOver && "border-gold"
         )}
       >
-        {sectionIds.map((id) => {
+        {visibleIds.map((id) => {
           const section = sectionById.get(id);
           if (!section) return null;
-          return <SheetSection key={id} section={section} onRoll={onRoll} />;
+          return <SheetSection key={id} section={section} onRoll={onRoll} onHide={() => onHide(id)} />;
         })}
       </div>
     </SortableContext>
@@ -157,6 +171,19 @@ export function SheetPane({ onRoll }: { onRoll: (bonus: number, label: string) =
   const [persistedColumns, setPersistedColumns] = useLocalStorageState<SectionId[][]>(STORAGE_KEYS.sheetOrder, {
     defaultValue: DEFAULT_COLUMNS,
   });
+
+  // Hidden sections stay in `persistedColumns` (so their column position is
+  // remembered for when they're shown again) — this list only controls what
+  // actually renders/is draggable, via SheetColumn's `hidden` filtering.
+  const [hiddenIds, setHiddenIds] = useLocalStorageState<SectionId[]>(STORAGE_KEYS.sheetHidden, {
+    defaultValue: [],
+  });
+  const hidden = useMemo(
+    () => new Set(hiddenIds.filter((id): id is SectionId => (DEFAULT_SECTION_ORDER as string[]).includes(id))),
+    [hiddenIds]
+  );
+  const hideSection = (id: SectionId) => setHiddenIds((prev) => (prev.includes(id) ? prev : [...prev, id]));
+  const showSection = (id: SectionId) => setHiddenIds((prev) => prev.filter((x) => x !== id));
 
   const columns = useMemo(() => {
     const known = new Set(DEFAULT_SECTION_ORDER);
@@ -281,7 +308,46 @@ export function SheetPane({ onRoll }: { onRoll: (bonus: number, label: string) =
     <aside ref={ref} className="flex min-w-0 flex-col bg-linear-to-b from-bg-1 to-bg-0">
       <div className="flex flex-none flex-wrap items-center justify-between gap-2.5 border-b border-edge p-4 min-[900px]:p-2.5">
         <h2 className="m-0 text-[1.1rem] tracking-wide text-gold min-[900px]:text-[0.98rem]">📝 Deník postavy</h2>
-        <ImportExport />
+        <div className="flex items-center gap-1.5">
+          {hidden.size > 0 && (
+            <Popover>
+              <PopoverTrigger
+                render={
+                  <button
+                    type="button"
+                    title="Zobrazit skryté sekce"
+                    className="flex items-center gap-1 rounded-md border border-edge bg-face px-2 py-1 text-[0.7rem] tracking-wide text-text-dim transition-colors hover:border-gold hover:text-gold-bright"
+                  />
+                }
+              >
+                👁 Skryté ({hidden.size})
+              </PopoverTrigger>
+              <PopoverContent className="w-56">
+                <div className="flex flex-col gap-1">
+                  {hiddenIds
+                    .filter((id) => hidden.has(id))
+                    .map((id) => {
+                      const section = sectionById.get(id);
+                      if (!section) return null;
+                      return (
+                        <button
+                          key={id}
+                          type="button"
+                          onClick={() => showSection(id)}
+                          className="flex items-center gap-2 rounded-md px-2 py-1.5 text-left text-[0.82rem] text-foreground transition-colors hover:bg-face"
+                        >
+                          <span className="shrink-0">{section.icon}</span>
+                          <span className="min-w-0 flex-1 truncate">{section.title}</span>
+                          <span className="shrink-0 text-[0.7rem] text-gold">+ Zobrazit</span>
+                        </button>
+                      );
+                    })}
+                </div>
+              </PopoverContent>
+            </Popover>
+          )}
+          <ImportExport />
+        </div>
       </div>
 
       <div className="flex-1 items-start gap-4.5 p-4 pb-8">
@@ -295,7 +361,7 @@ export function SheetPane({ onRoll }: { onRoll: (bonus: number, label: string) =
         >
           <div className="flex items-start gap-4.5">
             {displayColumns.map((col, i) => (
-              <SheetColumn key={i} id={`col-${i}`} sectionIds={col} onRoll={onRoll} />
+              <SheetColumn key={i} id={`col-${i}`} sectionIds={col} hidden={hidden} onRoll={onRoll} onHide={hideSection} />
             ))}
           </div>
           <DragOverlay>

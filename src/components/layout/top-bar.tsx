@@ -16,15 +16,20 @@ function VitalChip({
   icon,
   label,
   value,
+  title,
   className,
 }: {
   icon: string;
   label?: string;
   value: string;
+  title?: string;
   className?: string;
 }) {
   return (
-    <div className={cn("flex items-center gap-1.5 rounded-[10px] border border-edge bg-bg-2 px-2.5 py-1.5", className)}>
+    <div
+      title={title}
+      className={cn("flex items-center gap-1.5 rounded-[10px] border border-edge bg-bg-2 px-2.5 py-1.5", className)}
+    >
       <span className="shrink-0 text-[0.92rem]">{icon}</span>
       {label && (
         <span className="hidden text-[0.64rem] tracking-wide text-text-dim uppercase min-[641px]:inline">{label}</span>
@@ -74,18 +79,22 @@ export const TopBar = forwardRef<
         className="flex flex-1 flex-wrap items-center justify-center gap-2 min-w-0 max-[640px]:order-3 max-[640px]:basis-full max-[640px]:justify-start"
       >
         <VitalChip icon="🪪" value={charName} className="border-gold bg-gold/8 [&>span:last-child]:max-w-[34vw] [&>span:last-child]:overflow-hidden [&>span:last-child]:text-ellipsis [&>span:last-child]:whitespace-nowrap [&>span:last-child]:text-gold-bright" />
-        <VitalChip icon="🛡️" label="OČ" value={ac || "—"} />
+        <VitalChip icon="🛡️" label="OČ" value={ac || "—"} title="Obranné číslo" />
         <VitalChip icon="🏃" label="Rychlost" value={speed} />
         <VitalChip icon="❤️" label="Životy" value={hp} />
         <VitalChip icon="⭐" label="Inspirace" value={String(inspCount)} />
-        <VitalChip icon="🎯" label="Zdat. bonus" value={profBonus} />
+        <VitalChip icon="🎯" label="Zdat. bonus" value={profBonus} title="Zdatnostní bonus" />
 
         <div className="flex w-full flex-wrap justify-center gap-2 max-[640px]:justify-start">
           {ABILITIES.map((a) => {
             const slice = abilities?.[a.key];
             const total = slice ? abilityScoreTotal(slice.score, slice.item) : null;
             return (
-              <div key={a.key} className="flex items-center gap-1.5 rounded-[10px] border border-edge bg-bg-2 px-2.5 py-1.5">
+              <div
+                key={a.key}
+                title={a.label}
+                className="flex items-center gap-1.5 rounded-[10px] border border-edge bg-bg-2 px-2.5 py-1.5"
+              >
                 <span className="text-[0.62rem] font-bold tracking-wide text-text-dim">{ABIL_ABBR[a.key]}</span>
                 <span className="text-[0.85rem] font-bold text-gold-bright">{abilityModDisplay(total)}</span>
               </div>
