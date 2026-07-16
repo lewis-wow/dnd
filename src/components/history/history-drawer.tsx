@@ -60,10 +60,10 @@ export function HistoryDrawer({
   return (
     <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
       <DialogPrimitive.Portal>
-        <DialogPrimitive.Backdrop className="fixed inset-0 z-40 bg-black/55 opacity-0 transition-opacity duration-250 data-open:opacity-100" />
+        <DialogPrimitive.Backdrop className="fixed inset-0 z-40 bg-black/55 transition-opacity duration-250 data-ending-style:opacity-0 data-starting-style:opacity-0" />
         <DialogPrimitive.Popup
           style={{ height: "var(--app-height, 100dvh)" }}
-          className="fixed inset-y-0 right-0 z-50 flex w-100 max-w-[90vw] translate-x-full flex-col bg-linear-to-b from-bg-1 to-bg-0 shadow-[-8px_0_30px_rgba(0,0,0,0.5)] transition-transform duration-300 ease-in-out data-open:translate-x-0 outline-none"
+          className="fixed inset-y-0 right-0 z-50 flex w-100 max-w-[90vw] flex-col bg-linear-to-b from-bg-1 to-bg-0 shadow-[-8px_0_30px_rgba(0,0,0,0.5)] outline-none transition-transform duration-300 ease-in-out data-ending-style:translate-x-full data-starting-style:translate-x-full"
         >
           <div className="flex items-center justify-between border-b border-edge p-5">
             <DialogPrimitive.Title className="m-0 text-[1.2rem] tracking-[2px] text-gold">

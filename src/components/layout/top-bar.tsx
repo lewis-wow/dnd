@@ -77,12 +77,7 @@ export const TopBar = forwardRef<HTMLElement, { historyCount: number; onOpenHist
         <VitalChip icon="🛡️" label="OČ" value={ac || "—"} />
         <VitalChip icon="🏃" label="Rychlost" value={speed} />
         <VitalChip icon="❤️" label="Životy" value={hp} />
-        <VitalChip
-          icon="⭐"
-          label="Inspirace"
-          value={String(inspCount)}
-          className={cn("opacity-45 transition-[opacity,border-color,box-shadow]", inspCount > 0 && "border-gold opacity-100 shadow-[0_0_12px_rgba(217,180,90,0.3)]")}
-        />
+        <VitalChip icon="⭐" label="Inspirace" value={String(inspCount)} />
         <VitalChip icon="🎯" label="Zdat. bonus" value={profBonus} />
 
         <div className="flex w-full flex-wrap justify-center gap-2 max-[640px]:justify-start">
