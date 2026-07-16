@@ -161,13 +161,21 @@ export function SheetPane({ onRoll }: { onRoll: (bonus: number, label: string) =
   const columns = useMemo(() => {
     const known = new Set(DEFAULT_SECTION_ORDER);
     const seen = new Set<SectionId>();
-    const filtered = persistedColumns.map((col) =>
-      col.filter((id) => {
-        if (!known.has(id) || seen.has(id)) return false;
-        seen.add(id);
-        return true;
-      })
-    );
+    // persistedColumns comes straight out of localStorage, so its shape isn't
+    // guaranteed — a stale value from an earlier schema (e.g. a flat
+    // SectionId[] instead of SectionId[][]) or hand-edited storage would
+    // otherwise crash `col.filter` here. Drop anything that isn't itself an
+    // array; the `missing` fallback below rebuilds a fresh layout for
+    // whatever sections that leaves out.
+    const filtered = (Array.isArray(persistedColumns) ? persistedColumns : [])
+      .filter((col): col is SectionId[] => Array.isArray(col))
+      .map((col) =>
+        col.filter((id) => {
+          if (!known.has(id) || seen.has(id)) return false;
+          seen.add(id);
+          return true;
+        })
+      );
     const missing = DEFAULT_SECTION_ORDER.filter((id) => !seen.has(id));
 
     if (filtered.length !== colCount || missing.length > 0) {
