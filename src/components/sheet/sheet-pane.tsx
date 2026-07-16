@@ -71,8 +71,18 @@ function moveSection(
     insertAt = insertBefore ? targetIdx : targetIdx + 1;
   }
 
-  const next = cols.map((col) => [...col]);
-  next[activeColIdx] = next[activeColIdx].filter((id) => id !== activeId);
+  // Only the active and target columns actually change — copy just those two
+  // (they may be the same column) and keep every other column's array
+  // reference untouched. Every `SortableContext` in the pane is keyed on its
+  // own column's item-array identity (dnd-kit remeasures/re-animates a
+  // column when that identity changes), so rebuilding all columns on every
+  // dragover tick — even ones nothing moved through — was forcing every
+  // column in the pane to remeasure on every pointer event. That extra churn
+  // is what fed dnd-kit's own internal remeasure/animate-layout-changes
+  // effects into a "Maximum update depth exceeded" loop on multi-column
+  // drags; touching only the two columns that actually change avoids it.
+  const next = cols.slice();
+  next[activeColIdx] = cols[activeColIdx].filter((id) => id !== activeId);
   // Re-find the target column's index into `next` — filtering the active
   // column above doesn't change any OTHER column's index, so targetColIdx
   // is still correct; only the insert position within it needs adjusting
@@ -81,6 +91,8 @@ function moveSection(
   if (targetColIdx === activeColIdx) {
     const removedIdx = cols[activeColIdx].indexOf(activeId);
     if (removedIdx !== -1 && removedIdx < insertAt) insertAt -= 1;
+  } else {
+    next[targetColIdx] = cols[targetColIdx].slice();
   }
   next[targetColIdx].splice(insertAt, 0, activeId);
 

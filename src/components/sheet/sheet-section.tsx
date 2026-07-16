@@ -13,6 +13,7 @@ export function SheetSection({
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: section.id,
+    animateLayoutChanges: () => false,
   });
 
   const style = {
