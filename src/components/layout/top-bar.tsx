@@ -34,10 +34,10 @@ function VitalChip({
   );
 }
 
-export const TopBar = forwardRef<HTMLElement, { historyCount: number; onOpenHistory: () => void }>(function TopBar(
-  { historyCount, onOpenHistory },
-  ref
-) {
+export const TopBar = forwardRef<
+  HTMLElement,
+  { historyCount: number; onOpenHistory: () => void; onOpenGuide: () => void }
+>(function TopBar({ historyCount, onOpenHistory, onOpenGuide }, ref) {
   const { control } = useFormContext<SheetFormValues>();
   const basic = useWatch({ control, name: "basic" });
   const abilities = useWatch({ control, name: "abilities" });
@@ -95,6 +95,14 @@ export const TopBar = forwardRef<HTMLElement, { historyCount: number; onOpenHist
       </div>
 
       <div className="flex flex-none gap-2.5">
+        <button
+          type="button"
+          onClick={onOpenGuide}
+          aria-label="Otevřít příručku"
+          className="flex items-center gap-1.5 rounded-[10px] border border-edge bg-bg-2 px-3.5 py-2.5 text-[0.82rem] tracking-wide text-gold transition-[background,border-color] hover:border-gold hover:bg-face-lit active:scale-95 max-[640px]:min-h-10 max-[640px]:px-2.5"
+        >
+          📖 <span className="max-[640px]:hidden">Příručka</span>
+        </button>
         <button
           type="button"
           onClick={onOpenHistory}
