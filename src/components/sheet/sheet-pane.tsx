@@ -133,7 +133,15 @@ function SheetColumn({
   onHide: (id: SectionId) => void;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id });
-  const visibleIds = sectionIds.filter((sectionId) => !hidden.has(sectionId));
+  // Memoized: a fresh array here on every render (even ones where neither
+  // `sectionIds` nor `hidden` actually changed) changes `items`' identity on
+  // every dragover tick, which re-triggers dnd-kit's own remeasure/collision
+  // cycle — see the extensive notes on `moveSection` below for why that
+  // produces a "Maximum update depth exceeded" crash mid-drag.
+  const visibleIds = useMemo(
+    () => sectionIds.filter((sectionId) => !hidden.has(sectionId)),
+    [sectionIds, hidden]
+  );
   return (
     <SortableContext items={visibleIds} strategy={verticalListSortingStrategy}>
       <div
