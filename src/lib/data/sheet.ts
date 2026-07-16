@@ -342,10 +342,14 @@ export const BACKSTORY_FIELDS: FieldSpec[] = [
 export type SectionId =
   | "basic"
   | "combat"
-  | "abilities"
+  | "abilityScores"
+  | "savingThrows"
+  | "skills"
   | "attacks"
   | "personality"
   | "features"
+  | "equipment"
+  | "languages"
   | "appearance"
   | "backstory"
   | "spells";
@@ -359,10 +363,14 @@ export interface SectionMeta {
 export const SHEET_SECTIONS: SectionMeta[] = [
   { id: "basic", icon: "🪪", title: "Základní informace" },
   { id: "combat", icon: "⚔️", title: "Boj a životy" },
-  { id: "abilities", icon: "📊", title: "Vlastnosti, záchrany a dovednosti" },
+  { id: "abilityScores", icon: "📊", title: "Vlastnosti" },
+  { id: "savingThrows", icon: "🛡️", title: "Záchranné hody" },
+  { id: "skills", icon: "🧠", title: "Dovednosti" },
   { id: "attacks", icon: "🗡️", title: "Útoky" },
   { id: "personality", icon: "🎭", title: "Osobnost postavy" },
-  { id: "features", icon: "🎒", title: "Schopnosti, vybavení a jazyky" },
+  { id: "features", icon: "🌟", title: "Schopnosti a rysy" },
+  { id: "equipment", icon: "🎒", title: "Vybavení" },
+  { id: "languages", icon: "🗣️", title: "Jazyky a ostatní zdatnosti" },
   { id: "appearance", icon: "🧝", title: "Vzhled a osobní údaje" },
   { id: "backstory", icon: "📜", title: "Příběh postavy" },
   { id: "spells", icon: "✨", title: "Kouzlení" },
