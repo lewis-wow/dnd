@@ -12,34 +12,38 @@ function SpellLevelCard({ level }: { level: number }) {
 
   return (
     <div className="rounded-xl border border-edge bg-bg-1 px-3.5 py-3">
-      <div className="mb-2 flex flex-wrap items-center gap-2">
+      <div className="mb-2 flex items-center gap-2">
         <span className="flex size-[26px] shrink-0 items-center justify-center rounded-full border border-gold text-[0.8rem] font-extrabold text-gold-bright">
           {level}
         </span>
         <span className="flex-1 text-[0.85rem] font-bold tracking-wide text-gold">
           {isCantrip ? "Triky" : `Kouzla ${level}. úrovně`}
         </span>
-        {!isCantrip && (
-          <>
-            <label className="mr-0.5 text-[0.66rem] tracking-wide text-text-dim">Pozic celkem</label>
-            <FieldTooltip className="shrink-0" content={`Kolik pozic ${level}. úrovně má postava celkem k dispozici za odpočinek`}>
+      </div>
+      {!isCantrip && (
+        <div className="mb-2 flex flex-wrap gap-3">
+          <div className="flex min-w-0 flex-col gap-1">
+            <label className="text-[0.62rem] tracking-wide text-text-dim uppercase">Pozic celkem</label>
+            <FieldTooltip content={`Kolik pozic ${level}. úrovně má postava celkem k dispozici za odpočinek`}>
               <Input
                 type="text"
-                className="h-auto w-13 rounded-md border-edge bg-face p-1 text-center text-[0.8rem] text-foreground"
+                className="h-auto w-16 rounded-md border-edge bg-face p-1.5 text-center text-[0.8rem] text-foreground"
                 {...register(`spells.levels.${level}.slotsTotal`)}
               />
             </FieldTooltip>
-            <label className="mr-0.5 text-[0.66rem] tracking-wide text-text-dim">Utraceno</label>
-            <FieldTooltip className="shrink-0" content={`Kolik pozic ${level}. úrovně už postava od posledního odpočinku utratila`}>
+          </div>
+          <div className="flex min-w-0 flex-col gap-1">
+            <label className="text-[0.62rem] tracking-wide text-text-dim uppercase">Utraceno</label>
+            <FieldTooltip content={`Kolik pozic ${level}. úrovně už postava od posledního odpočinku utratila`}>
               <Input
                 type="text"
-                className="h-auto w-13 rounded-md border-edge bg-face p-1 text-center text-[0.8rem] text-foreground"
+                className="h-auto w-16 rounded-md border-edge bg-face p-1.5 text-center text-[0.8rem] text-foreground"
                 {...register(`spells.levels.${level}.slotsUsed`)}
               />
             </FieldTooltip>
-          </>
-        )}
-      </div>
+          </div>
+        </div>
+      )}
       <ItemList
         name={`spells.levels.${level}.spells`}
         placeholder="Název kouzla"
