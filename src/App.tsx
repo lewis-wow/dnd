@@ -68,28 +68,30 @@ function App() {
     <FormProvider {...form}>
       <TooltipProvider delay={300}>
         <DieGradientDefs />
-        <TopBar
-          ref={topbarRef}
-          historyCount={roller.history.length}
-          onOpenHistory={() => setHistoryOpen(true)}
-          onOpenGuide={() => setGuideOpen(true)}
-        />
+        <div className="flex min-h-(--app-height,100dvh) flex-col">
+          <TopBar
+            ref={topbarRef}
+            historyCount={roller.history.length}
+            onOpenHistory={() => setHistoryOpen(true)}
+            onOpenGuide={() => setGuideOpen(true)}
+          />
 
-        <DiceBar
-          pool={roller.pool}
-          mod={roller.mod}
-          onModChange={(n) => roller.setMod(n)}
-          lastEntry={roller.lastEntry}
-          rolling={roller.rolling}
-          flickerValues={roller.flickerValues}
-          onAdd={(name) => roller.setPoolQty(name, (roller.pool[name] ?? 0) + 1)}
-          onRemove={(name) => roller.setPoolQty(name, (roller.pool[name] ?? 0) - 1)}
-          onRollPool={roller.rollPool}
-          onAdvantage={() => roller.rollAdvantage("adv")}
-          onDisadvantage={() => roller.rollAdvantage("dis")}
-        />
+          <DiceBar
+            pool={roller.pool}
+            mod={roller.mod}
+            onModChange={(n) => roller.setMod(n)}
+            lastEntry={roller.lastEntry}
+            rolling={roller.rolling}
+            flickerValues={roller.flickerValues}
+            onAdd={(name) => roller.setPoolQty(name, (roller.pool[name] ?? 0) + 1)}
+            onRemove={(name) => roller.setPoolQty(name, (roller.pool[name] ?? 0) - 1)}
+            onRollPool={roller.rollPool}
+            onAdvantage={() => roller.rollAdvantage("adv")}
+            onDisadvantage={() => roller.rollAdvantage("dis")}
+          />
 
-        <SheetPane onRoll={roller.rollFromSheet} />
+          <SheetPane onRoll={roller.rollFromSheet} />
+        </div>
 
         <GuideDrawer open={guideOpen} onOpenChange={setGuideOpen} />
 

@@ -305,7 +305,7 @@ export function SheetPane({ onRoll }: { onRoll: (bonus: number, label: string) =
   const activeSection = activeId ? sectionById.get(activeId) : null;
 
   return (
-    <aside ref={ref} className="flex min-w-0 flex-col bg-linear-to-b from-bg-1 to-bg-0">
+    <aside ref={ref} className="flex min-w-0 flex-1 flex-col bg-linear-to-b from-bg-1 to-bg-0">
       <div className="flex flex-none flex-wrap items-center justify-between gap-2.5 border-b border-edge p-4 min-[900px]:p-2.5">
         <h2 className="m-0 text-[1.1rem] tracking-wide text-gold min-[900px]:text-[0.98rem]">📝 Deník postavy</h2>
         <div className="flex items-center gap-1.5">
