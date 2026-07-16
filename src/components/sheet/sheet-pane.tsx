@@ -4,6 +4,7 @@ import {
   DndContext,
   DragOverlay,
   PointerSensor,
+  closestCenter,
   pointerWithin,
   rectIntersection,
   useDroppable,
@@ -35,11 +36,26 @@ const sectionById = new Map(SHEET_SECTIONS.map((s) => [s.id, s]));
 // intersection) when the pointer isn't over any specific card.
 const collisionDetection: CollisionDetection = (args) => {
   const pointerCollisions = pointerWithin(args);
-  if (pointerCollisions.length > 0) {
-    const cardCollision = pointerCollisions.find((c) => !String(c.id).startsWith("col-"));
-    return cardCollision ? [cardCollision] : pointerCollisions;
-  }
-  return rectIntersection(args);
+  const cardCollision = pointerCollisions.find((c) => !String(c.id).startsWith("col-"));
+  if (cardCollision) return [cardCollision];
+  if (pointerCollisions.length === 0) return rectIntersection(args);
+
+  // The pointer is over a column but not over any specific card — i.e. in
+  // the gap between two cards (columns have no padding, so a column's
+  // bounding rect is exactly the union of its cards' rects; the only
+  // "container, not card" area is an inter-card gap). Resolve to the
+  // nearest card instead of falling through to the column container:
+  // moveSection's column-container branch always inserts at the *end* of
+  // the column, which is only correct when that gap happens to be the
+  // column's last one. For any other gap — e.g. easing off a drag right
+  // before releasing the pointer — that silently reverted a reorder that
+  // had already happened.
+  const cardsOnly = {
+    ...args,
+    droppableContainers: args.droppableContainers.filter((c) => !String(c.id).startsWith("col-")),
+  };
+  const nearestCard = closestCenter(cardsOnly);
+  return nearestCard.length > 0 ? nearestCard : pointerCollisions;
 };
 
 /** Where `activeId` should land, given a hover over `overId` (a card id or a
