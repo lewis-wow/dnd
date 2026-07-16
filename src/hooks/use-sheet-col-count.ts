@@ -6,10 +6,17 @@ import { computeSheetColCount } from "@/lib/layout";
  * layout effect (synchronous, before paint) rather than a regular effect —
  * otherwise the very first render commits with the hook's default colCount,
  * paints one frame of that wrong layout, and only then snaps to the real
- * count, which reads as a visible flash/reflow on every load. */
+ * count, which reads as a visible flash/reflow on every load.
+ *
+ * `colCount` starts `null` (not "1") specifically so callers can tell "not
+ * measured yet" apart from "measured, and it's 1 column wide" — a consumer
+ * that reconciles/persists a column layout keyed on this count must not
+ * treat the pre-measurement render as authoritative, or it'll rewrite a
+ * saved multi-column layout down to whatever the placeholder happened to be
+ * before the real width ever arrives. */
 export function useSheetColCount<T extends HTMLElement>() {
   const ref = useRef<T | null>(null);
-  const [colCount, setColCount] = useState(1);
+  const [colCount, setColCount] = useState<number | null>(null);
 
   useLayoutEffect(() => {
     const el = ref.current;

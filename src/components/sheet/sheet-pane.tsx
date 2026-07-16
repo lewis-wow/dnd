@@ -213,6 +213,15 @@ export function SheetPane({ onRoll }: { onRoll: (bonus: number, label: string) =
       );
     const missing = DEFAULT_SECTION_ORDER.filter((id) => !seen.has(id));
 
+    // `colCount` is `null` until useSheetColCount's layout effect actually
+    // measures the pane — treating that placeholder as "the real column
+    // count" here would force a rebalance against whatever it happens to
+    // default to (this used to be a hardcoded `1`), and the effect below
+    // would then persist *that* as the new baseline before the real count
+    // ever arrives, permanently flattening any custom multi-column layout
+    // on every reload. Only reconcile once we actually know the count.
+    if (colCount == null) return filtered;
+
     if (filtered.length !== colCount || missing.length > 0) {
       return distributeIntoColumns([...filtered.flat(), ...missing], colCount);
     }
@@ -228,12 +237,13 @@ export function SheetPane({ onRoll }: { onRoll: (bonus: number, label: string) =
   // once it's actually needed makes that the new persisted baseline instead
   // of recomputing the same correction indefinitely.
   useEffect(() => {
+    if (colCount == null) return;
     const changed =
       persistedColumns.length !== columns.length ||
       persistedColumns.some((col, i) => col.length !== columns[i]?.length || col.some((id, j) => id !== columns[i][j]));
     if (changed) setPersistedColumns(columns);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [columns]);
+  }, [columns, colCount]);
 
   const [dragColumns, setDragColumns] = useState<SectionId[][] | null>(null);
   const [activeId, setActiveId] = useState<SectionId | null>(null);
