@@ -84,7 +84,7 @@ function AbilityCard({ abilityKey, label, skills, onRoll }: { abilityKey: Abilit
             <Input
               type="text"
               placeholder="—"
-              className="h-auto w-full rounded-lg border-edge bg-face p-2 text-center text-[1.05rem] font-extrabold text-foreground"
+              className="h-auto w-full rounded-lg border-edge bg-face p-2 text-center text-[1.05rem] font-extrabold text-foreground md:text-[1.05rem]"
               {...register(`abilities.${abilityKey}.score`)}
             />
           </FieldTooltip>
@@ -104,7 +104,7 @@ function AbilityCard({ abilityKey, label, skills, onRoll }: { abilityKey: Abilit
             <Input
               type="text"
               placeholder="0"
-              className="h-auto w-full rounded-lg border-edge bg-face p-2 text-center text-[1.05rem] font-extrabold text-foreground"
+              className="h-auto w-full rounded-lg border-edge bg-face p-2 text-center text-[1.05rem] font-extrabold text-foreground md:text-[1.05rem]"
               {...register(`abilities.${abilityKey}.item`)}
             />
           </FieldTooltip>
