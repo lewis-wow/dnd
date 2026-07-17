@@ -60,7 +60,7 @@ export const TopBar = forwardRef<
   return (
     <header
       ref={ref}
-      className="sticky top-0 z-30 flex flex-wrap items-center gap-x-4.5 gap-y-2 border-b border-edge bg-linear-to-b from-bg-1 to-bg-0 px-5 py-2.5 shadow-[0_4px_16px_rgba(0,0,0,0.35)] max-[640px]:px-3 max-[640px]:py-2"
+      className="sticky top-0 z-30 flex flex-wrap items-center gap-x-4.5 gap-y-2 border-b border-edge bg-linear-to-b from-bg-1 to-bg-0 px-5 py-2.5 shadow-[0_4px_16px_rgba(0,0,0,0.35)] max-[640px]:justify-between max-[640px]:px-3 max-[640px]:py-2"
     >
       <div className="flex flex-none items-center gap-2.5">
         <span className="text-[1.5rem] leading-none">🎲</span>
@@ -76,7 +76,7 @@ export const TopBar = forwardRef<
 
       <div
         aria-label="Klíčové hodnoty postavy"
-        className="flex flex-1 flex-wrap items-center justify-center gap-2 min-w-0 max-[640px]:order-3 max-[640px]:basis-full max-[640px]:justify-start"
+        className="flex flex-1 flex-wrap items-center justify-center gap-2 min-w-0 max-[640px]:hidden"
       >
         <VitalChip icon="🪪" value={charName} className="border-gold bg-gold/8 [&>span:last-child]:max-w-[34vw] [&>span:last-child]:overflow-hidden [&>span:last-child]:text-ellipsis [&>span:last-child]:whitespace-nowrap [&>span:last-child]:text-gold-bright" />
         <VitalChip icon="🛡️" label="OČ" value={ac || "—"} title="Obranné číslo" />

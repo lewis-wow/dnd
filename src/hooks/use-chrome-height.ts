@@ -1,14 +1,16 @@
 import { useEffect } from "react";
 import type { RefObject } from "react";
 
-/** Mirrors the legacy app's --chrome-h: the topbar's own live height, used by
- * both the phone roller and the desktop split layout to size panes to
- * exactly "one screen minus the topbar". */
-export function useChromeHeight(ref: RefObject<HTMLElement | null>) {
+/** Mirrors the legacy app's --chrome-h: a sticky header block's own live
+ * height, used to size panes to exactly "one screen minus that header".
+ * `varName` lets callers track more than one header stack (e.g. the topbar
+ * alone vs. the topbar plus the phone tab switcher) without clobbering each
+ * other's CSS var. */
+export function useChromeHeight(ref: RefObject<HTMLElement | null>, varName = "--chrome-h") {
   useEffect(() => {
     function setChromeHeight() {
       const h = ref.current ? ref.current.getBoundingClientRect().height : 0;
-      document.documentElement.style.setProperty("--chrome-h", `${Math.round(h)}px`);
+      document.documentElement.style.setProperty(varName, `${Math.round(h)}px`);
     }
     setChromeHeight();
     window.addEventListener("resize", setChromeHeight);
@@ -20,5 +22,5 @@ export function useChromeHeight(ref: RefObject<HTMLElement | null>) {
       window.removeEventListener("orientationchange", setChromeHeight);
       ro.disconnect();
     };
-  }, [ref]);
+  }, [ref, varName]);
 }
