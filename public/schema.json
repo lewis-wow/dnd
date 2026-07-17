@@ -1,0 +1,252 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lewis-wow.github.io/dnd/schema.json",
+  "title": "Character import data (Deník postavy)",
+  "description": "Import format for a D&D character sheet web app whose UI is in Czech. Extract this exact shape from a source character sheet (PDF, image, etc.) and output ONLY JSON matching this schema, no extra commentary. All leaf values are strings unless noted otherwise — numbers like ability scores, HP, or bonuses must still be written as strings (e.g. \"14\", \"+2\"). Every field is optional: if you can't determine a value from the source, leave it as an empty string \"\" (or omit it) rather than guessing — the importing app only overwrites fields that are non-empty, so blanks are safe and won't clobber anything. The VALUES for enum-restricted fields (class, background, race, alignment, spellcasting ability, etc.) must stay in Czech exactly as listed, since the app displays them verbatim in its Czech UI — only pick from the given enum list for those fields. Free-text fields (name, backstory, equipment, spell names, etc.) should keep whatever language/spelling the source uses.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "basic": {
+      "type": "object",
+      "description": "Basic character info (name, class, level, race, background, alignment, etc.).",
+      "additionalProperties": false,
+      "properties": {
+        "charName": { "type": "string", "description": "Character's name." },
+        "class": {
+          "type": "string",
+          "description": "Character class. Must be one of the Czech enum values verbatim. If the real class isn't in the list, set this to \"Jiné\" (= \"Other\") and put the actual class name in class_other.",
+          "enum": ["Alchymista", "Barbar", "Bard", "Klerik", "Druid", "Bojovník", "Mnich", "Paladin", "Hraničář", "Zloděj (Tulák)", "Čaroděj", "Černokněžník", "Kouzelník", "Jiné", ""]
+        },
+        "class_other": { "type": "string", "description": "Custom class name — only used when class is \"Jiné\" (Other)." },
+        "subclass": { "type": "string", "description": "Subclass / specialization within the class (e.g. School of Divination, Path of the Berserker, Circle of the Moon). Free text." },
+        "level": {
+          "type": "string",
+          "description": "Character level, 1-20.",
+          "enum": ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", ""]
+        },
+        "background": {
+          "type": "string",
+          "description": "Character background. Must be one of the Czech enum values verbatim. If the real background isn't in the list, set this to \"Jiné\" (Other) and put the actual value in background_other.",
+          "enum": ["Voják", "Duchovní", "Zločinec", "Řemeslník", "Lidový hrdina", "Průvodce", "Poustevník", "Zábavný umělec", "Šlechtic", "Cizinec", "Mudrc", "Námořník", "Vyvrhel", "Jiné", ""]
+        },
+        "background_other": { "type": "string", "description": "Custom background — only used when background is \"Jiné\" (Other)." },
+        "playerName": { "type": "string", "description": "Name of the player at the table." },
+        "race": {
+          "type": "string",
+          "description": "Character race/species. Must be one of the Czech enum values verbatim. If the real race isn't in the list, set this to \"Jiná\" (Other) and put the actual value in race_other.",
+          "enum": ["Člověk", "Elf", "Trpaslík", "Půlčík (Hobit)", "Drakorozený", "Gnóm", "Půlelf", "Půlork", "Tiefling", "Jiná", ""]
+        },
+        "race_other": { "type": "string", "description": "Custom race — only used when race is \"Jiná\" (Other)." },
+        "alignment": {
+          "type": "string",
+          "description": "Moral/ethical alignment. Must be one of the Czech enum values verbatim (they correspond in order to: Lawful Good, Neutral Good, Chaotic Good, Lawful Neutral, True Neutral, Chaotic Neutral, Lawful Evil, Neutral Evil, Chaotic Evil).",
+          "enum": ["Zákonně dobré", "Neutrálně dobré", "Chaoticky dobré", "Zákonně neutrální", "Neutrální", "Chaoticky neutrální", "Zákonně zlé", "Neutrálně zlé", "Chaoticky zlé", ""]
+        },
+        "xp": { "type": "string", "description": "Experience points earned, as a numeric string." },
+        "profBonus": { "type": "string", "description": "Proficiency bonus, e.g. \"+2\"." },
+        "inspiration": {
+          "type": "string",
+          "description": "Inspiration points.",
+          "enum": ["1", "2", "3", "4", "5", ""]
+        }
+      }
+    },
+    "combat": {
+      "type": "object",
+      "description": "Combat stats and hit points — all values are numeric strings.",
+      "additionalProperties": false,
+      "properties": {
+        "ac": { "type": "string", "description": "Armor Class (AC)." },
+        "speed": { "type": "string", "description": "Movement speed in feet per round." },
+        "maxHp": { "type": "string", "description": "Maximum hit points." },
+        "currentHp": { "type": "string", "description": "Current hit points." },
+        "tempHp": { "type": "string", "description": "Temporary hit points." },
+        "hitDice": { "type": "string", "description": "Hit dice available for healing on rest, e.g. \"3d8\"." },
+        "deathSuccess": { "type": "string", "description": "Death saving throw successes so far (0-3)." },
+        "deathFail": { "type": "string", "description": "Death saving throw failures so far (0-3)." }
+      }
+    },
+    "abilities": {
+      "type": "object",
+      "description": "The six ability scores (str/dex/con/int/wis/cha) with their saving throws and skills.",
+      "additionalProperties": false,
+      "properties": {
+        "str": { "$ref": "#/$defs/abilitySlice", "description": "Strength.", "properties": { "skills": { "$ref": "#/$defs/skillsStr" } } },
+        "dex": { "$ref": "#/$defs/abilitySlice", "description": "Dexterity.", "properties": { "skills": { "$ref": "#/$defs/skillsDex" } } },
+        "con": { "$ref": "#/$defs/abilitySlice", "description": "Constitution.", "properties": { "skills": { "$ref": "#/$defs/skillsCon" } } },
+        "int": { "$ref": "#/$defs/abilitySlice", "description": "Intelligence.", "properties": { "skills": { "$ref": "#/$defs/skillsInt" } } },
+        "wis": { "$ref": "#/$defs/abilitySlice", "description": "Wisdom.", "properties": { "skills": { "$ref": "#/$defs/skillsWis" } } },
+        "cha": { "$ref": "#/$defs/abilitySlice", "description": "Charisma.", "properties": { "skills": { "$ref": "#/$defs/skillsCha" } } }
+      }
+    },
+    "passiveWis": { "type": "string", "description": "Passive Wisdom (Perception) score — usually 10 + Wisdom modifier (+ proficiency bonus if proficient in Perception)." },
+    "attacks": {
+      "type": "array",
+      "description": "Attacks and weapons. One row per attack.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "description": "Ignored on import — omit it or leave empty, the app assigns its own row id." },
+          "name": { "type": "string", "description": "Weapon or attack name, e.g. \"Longsword\"." },
+          "bonus": { "type": "string", "description": "Attack roll bonus (ability modifier + proficiency bonus), e.g. \"+5\"." },
+          "dmg": { "type": "string", "description": "Damage dice and type, e.g. \"1d8 + 3 slashing\"." }
+        }
+      }
+    },
+    "personality": {
+      "type": "object",
+      "description": "Character personality.",
+      "additionalProperties": false,
+      "properties": {
+        "traits": { "type": "string", "description": "Personality traits — short quirks and mannerisms." },
+        "ideals": { "type": "string", "description": "Ideals — principles and beliefs the character holds." },
+        "bonds": { "type": "string", "description": "Bonds — people, places, or things the character is tied to." },
+        "flaws": { "type": "string", "description": "Flaws — a weakness or vice that sometimes gets the character into trouble." }
+      }
+    },
+    "features": {
+      "type": "array",
+      "description": "Features and traits (from class, race, feats, etc). One row per feature.",
+      "items": { "$ref": "#/$defs/itemRow" }
+    },
+    "equipment": {
+      "type": "array",
+      "description": "Equipment and items the character carries. One row per item.",
+      "items": { "$ref": "#/$defs/itemRow" }
+    },
+    "languages": {
+      "type": "array",
+      "description": "Languages and other proficiencies (tools, weapons, armor, etc). One row per entry.",
+      "items": { "$ref": "#/$defs/itemRow" }
+    },
+    "appearance": {
+      "type": "object",
+      "description": "Appearance and personal details.",
+      "additionalProperties": false,
+      "properties": {
+        "age": { "type": "string", "description": "Age." },
+        "height": { "type": "string", "description": "Height." },
+        "weight": { "type": "string", "description": "Weight." },
+        "eyes": { "type": "string", "description": "Eye color." },
+        "skin": { "type": "string", "description": "Skin color/appearance." },
+        "hair": { "type": "string", "description": "Hair color and style." },
+        "appearance": { "type": "string", "description": "Overall appearance description — clothing, distinguishing marks, general impression." }
+      }
+    },
+    "backstory": {
+      "type": "object",
+      "description": "Character backstory.",
+      "additionalProperties": false,
+      "properties": {
+        "backstory": { "type": "string", "description": "The character's history before the adventure began." },
+        "allies": { "type": "string", "description": "Allies and organizations." },
+        "additionalFeatures": { "type": "string", "description": "Additional features and traits that didn't fit elsewhere." },
+        "treasure": { "type": "string", "description": "Treasure — valuable items or keepsakes the character owns." }
+      }
+    },
+    "spells": {
+      "type": "object",
+      "description": "Spellcasting.",
+      "additionalProperties": false,
+      "properties": {
+        "ability": {
+          "type": "string",
+          "description": "Spellcasting ability, in Czech: \"Inteligence\" = Intelligence, \"Moudrost\" = Wisdom, \"Charisma\" = Charisma.",
+          "enum": ["Inteligence", "Moudrost", "Charisma", ""]
+        },
+        "saveDc": { "type": "string", "description": "Spell save DC." },
+        "attackBonus": { "type": "string", "description": "Spell attack bonus." },
+        "levels": {
+          "type": "array",
+          "description": "Spells by level — index/level 0 = cantrips, 1-9 = spell levels. Include only the levels the character actually uses; slot counts and spells can be left empty.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "level": { "type": "integer", "minimum": 0, "maximum": 9, "description": "0 = cantrips, 1-9 = spell level." },
+              "slotsTotal": { "type": "string", "description": "Total number of spell slots at this level." },
+              "slotsUsed": { "type": "string", "description": "Number of spell slots currently used at this level." },
+              "spells": {
+                "type": "array",
+                "description": "Spells known/prepared at this level.",
+                "items": { "$ref": "#/$defs/itemRow" }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "itemRow": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "description": "Ignored on import — omit it or leave empty, the app assigns its own row id." },
+        "text": { "type": "string", "description": "The text of this row/line." }
+      }
+    },
+    "abilitySlice": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "score": { "type": "string", "description": "Base ability score (typically 8-20), as rolled/assigned at character creation." },
+        "item": { "type": "string", "description": "Bonus from equipment or magic items (e.g. gauntlets of ogre power), added on top of the base score." },
+        "saveMisc": { "type": "string", "description": "Extra flat bonus added to this ability's saving throw — usually the proficiency bonus if the character is proficient in this save, otherwise 0/empty." },
+        "skills": { "type": "object", "description": "Extra flat bonus added to each skill under this ability — usually the proficiency bonus (or double it for expertise) if proficient, otherwise 0/empty." }
+      }
+    },
+    "skillsStr": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": { "athletics": { "type": "string", "description": "Athletics." } }
+    },
+    "skillsDex": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "acrobatics": { "type": "string", "description": "Acrobatics." },
+        "sleightOfHand": { "type": "string", "description": "Sleight of Hand." },
+        "stealth": { "type": "string", "description": "Stealth." }
+      }
+    },
+    "skillsCon": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {}
+    },
+    "skillsInt": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "hist": { "type": "string", "description": "History." },
+        "arcana": { "type": "string", "description": "Arcana." },
+        "religion": { "type": "string", "description": "Religion." },
+        "investigation": { "type": "string", "description": "Investigation." },
+        "nature": { "type": "string", "description": "Nature." }
+      }
+    },
+    "skillsWis": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "medicine": { "type": "string", "description": "Medicine." },
+        "animalHandling": { "type": "string", "description": "Animal Handling." },
+        "survival": { "type": "string", "description": "Survival." },
+        "insight": { "type": "string", "description": "Insight." },
+        "perception": { "type": "string", "description": "Perception." }
+      }
+    },
+    "skillsCha": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "deception": { "type": "string", "description": "Deception." },
+        "persuasion": { "type": "string", "description": "Persuasion." },
+        "performance": { "type": "string", "description": "Performance." },
+        "intimidation": { "type": "string", "description": "Intimidation." }
+      }
+    }
+  }
+}
